@@ -40,19 +40,35 @@ std::unique_ptr<ExprAST> Parser::ParseIdentifierExpr() {
     if (Lexer::CurTok != '(') //simple variable ref
         return std::make_unique<VariableExprAST>(IdName);
 
-    // Call
-    Lexer::getNextToken(); //eat '('
     std::vector<std::unique_ptr<ExprAST>> Args;
+
     while (Lexer::CurTok != ')') { // TODO deviate from tutorial
+        Lexer::getNextToken();
         if (auto Arg = ParseExpression())
             Args.push_back(std::move(Arg));
         else
             return nullptr;
 
-        if (Lexer::CurTok != ',')
+        if (Lexer::CurTok != ',' && Lexer::CurTok != ')')
             return Log::LogError("Expected ')' or ',' in argument list");
-        Lexer::getNextToken();
     }
+
+    // Call
+    // Lexer::getNextToken(); //eat '('
+    // if (Lexer::CurTok != ')') {
+    //     while (true) {
+    //         if (auto Arg = Parser::ParseExpression())
+    //             Args.push_back(std::move(Arg));
+    //         else return nullptr;
+    //
+    //         if (Lexer::CurTok == ')')
+    //             break;
+    //
+    //         if (Lexer::CurTok != ',')
+    //             return Log::LogError("test: Expected ')' or ',' in argument list");
+    //         Lexer::getNextToken();
+    //     }
+    // }
 
     Lexer::getNextToken(); // eat the ')'
 
@@ -62,14 +78,14 @@ std::unique_ptr<ExprAST> Parser::ParseIdentifierExpr() {
 
 std::unique_ptr<ExprAST> Parser::ParsePrimary() {
     switch (Lexer::CurTok) {
+        default:
+            return Log::LogError("unknown token when expecting an expression");
         case tok_identifier:
             return ParseIdentifierExpr();
         case tok_number:
             return ParseNumberExpr();
         case '(':
             return ParseParenExpr();
-        default:
-            return Log::LogError("unknown token when expecting an expression");
     }
 }
 
@@ -154,7 +170,7 @@ std::unique_ptr<PrototypeAST> Parser::ParseExtern() {
 
 std::unique_ptr<FunctionAST> Parser::ParseTopLevelExpr()  {
     if (auto E = ParseExpression()) {
-        auto Proto = std::make_unique<PrototypeAST>("", std::vector<std::string>());
+        auto Proto = std::make_unique<PrototypeAST>("__anon_expr", std::vector<std::string>());
         return std::make_unique<FunctionAST>(std::move(Proto), std::move(E));
     }
 

@@ -23,8 +23,10 @@ int Lexer::gettok() {
 
     if (isalpha(LastChar)) {
         IdentifierStr = LastChar;
+
         while (isalnum((LastChar = getchar())))
             IdentifierStr += LastChar;
+
         if (IdentifierStr == "def")
             return tok_def;
         if (IdentifierStr == "extern")
@@ -38,7 +40,7 @@ int Lexer::gettok() {
         do {
             NumStr += LastChar;
             LastChar = getchar();
-        } while (isdigit(LastChar || LastChar == '.'));
+        } while (isdigit(LastChar) || LastChar == '.');
 
         NumVal = strtod(NumStr.c_str(), 0);
         return tok_number;
@@ -62,5 +64,5 @@ int Lexer::gettok() {
 }
 
 int Lexer::getNextToken() {
-        return CurTok = gettok();
+    return CurTok = gettok();
 }

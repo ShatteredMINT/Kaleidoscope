@@ -41,7 +41,6 @@ static void HandleTopLevelExpression() {
 
 static void MainLoop() {
     while (true) {
-        fprintf(stderr, "ready> ");
         switch (Lexer::CurTok) {
             case tok_eof:
                 return;
@@ -58,6 +57,7 @@ static void MainLoop() {
                 HandleTopLevelExpression();
                 break;
         }
+        fprintf(stderr, "ready> ");
     }
 }
 
