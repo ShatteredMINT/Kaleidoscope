@@ -2,6 +2,8 @@
 
 #include <memory>
 
+#include "llvm/IR/Constants.h"
+
 #include "ast.h"
 
 std::unique_ptr<ExprAST> Log::LogError(const char *Str) {
@@ -10,6 +12,11 @@ std::unique_ptr<ExprAST> Log::LogError(const char *Str) {
 }
 
 std::unique_ptr<PrototypeAST> Log::LogErrorP(const char *Str) {
+    LogError(Str);
+    return nullptr;
+}
+
+llvm::Value * Log::LogErrorV(const char * Str) {
     LogError(Str);
     return nullptr;
 }
