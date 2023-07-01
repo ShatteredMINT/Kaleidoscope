@@ -4,9 +4,7 @@
 #include <memory>
 #include <map>
 
-class ExprAST;
-class FunctionAST;
-class PrototypeAST;
+#include "ast.h"
 
 class Parser {
 public:
