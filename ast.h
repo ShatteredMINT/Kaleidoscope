@@ -10,12 +10,14 @@
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/Module.h"
 
-class AST{
+class IR{
 public:
     static std::unique_ptr<llvm::LLVMContext> Context;
     static std::unique_ptr<llvm::IRBuilder<>> Builder;
     static std::unique_ptr<llvm::Module> Module;
     static std::map<std::string, llvm::Value *> NamedValues;
+
+    static void InitializeModuleAndPassManager();
 };
 
 class ExprAST {

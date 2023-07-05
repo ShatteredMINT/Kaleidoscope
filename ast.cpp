@@ -10,17 +10,24 @@
 
 #include "log.h"
 
-std::unique_ptr<llvm::LLVMContext> AST::Context;
-std::unique_ptr<llvm::IRBuilder<>> AST::Builder;
-std::unique_ptr<llvm::Module> AST::Module;
-std::map<std::string, llvm::Value *> AST::NamedValues;
+std::unique_ptr<llvm::LLVMContext> IR::Context;
+std::unique_ptr<llvm::IRBuilder<>> IR::Builder;
+std::unique_ptr<llvm::Module> IR::Module;
+std::map<std::string, llvm::Value *> IR::NamedValues;
+
+void IR::InitializeModuleAndPassManager() {
+    Context = std::make_unique<llvm::LLVMContext>();
+    Module = std::make_unique<llvm::Module>("My cool JIT", *IR::Context);
+    Builder = std::make_unique<llvm::IRBuilder<>>(*IR::Context);
+}
+
 
 llvm::Value * NumberExprAST::codegen() {
-    return llvm::ConstantFP::get(*AST::Context, llvm::APFloat(Val));
+    return llvm::ConstantFP::get(*IR::Context, llvm::APFloat(Val));
 }
 
 llvm::Value * VariableExprAST::codegen() {
-    llvm::Value *V = AST::NamedValues[Name];
+    llvm::Value *V = IR::NamedValues[Name];
 
     if (!V)
         return Log::LogErrorV("Unknonw Variable name");
@@ -35,14 +42,14 @@ llvm::Value * BinaryExprAST::codegen() {
 
     switch (Op) {
         case '+':
-            return AST::Builder->CreateFAdd(L, R, "addtmp");
+            return IR::Builder->CreateFAdd(L, R, "addtmp");
         case '-':
-            return AST::Builder->CreateFSub(L, R, "subtmp");
+            return IR::Builder->CreateFSub(L, R, "subtmp");
         case '*':
-            return AST::Builder->CreateFMul(L, R, "multmp");
+            return IR::Builder->CreateFMul(L, R, "multmp");
         case '<':
-            L = AST::Builder->CreateFCmpULT(L, R, "cmptmp");
-            return AST::Builder->CreateUIToFP(L, llvm::Type::getDoubleTy(*AST::Context), "booltmp");
+            L = IR::Builder->CreateFCmpULT(L, R, "cmptmp");
+            return IR::Builder->CreateUIToFP(L, llvm::Type::getDoubleTy(*IR::Context), "booltmp");
 
         default:
             return Log::LogErrorV("invalid binary operator");
@@ -50,7 +57,7 @@ llvm::Value * BinaryExprAST::codegen() {
 }
 
 llvm::Value * CallExprAST::codegen() {
-    llvm::Function * CalleeF = AST::Module->getFunction(Callee);
+    llvm::Function * CalleeF = IR::Module->getFunction(Callee);
     if (!CalleeF)
         return Log::LogErrorV("unknown function referenced");
 
@@ -63,15 +70,15 @@ llvm::Value * CallExprAST::codegen() {
         if (!ArgsV.back()) return nullptr;
     }
 
-    return AST::Builder->CreateCall(CalleeF, ArgsV, "calltmp");
+    return IR::Builder->CreateCall(CalleeF, ArgsV, "calltmp");
 }
 
 llvm::Function * PrototypeAST::codegen() {
-    std::vector<llvm::Type *> Doubles(Args.size(), llvm::Type::getDoubleTy(*AST::Context));
+    std::vector<llvm::Type *> Doubles(Args.size(), llvm::Type::getDoubleTy(*IR::Context));
 
-    llvm::FunctionType * FT = llvm::FunctionType::get(llvm::Type::getDoubleTy(*AST::Context), Doubles, false);
+    llvm::FunctionType * FT = llvm::FunctionType::get(llvm::Type::getDoubleTy(*IR::Context), Doubles, false);
 
-    llvm::Function * F = llvm::Function::Create(FT, llvm::Function::ExternalLinkage, Name, AST::Module.get());
+    llvm::Function * F = llvm::Function::Create(FT, llvm::Function::ExternalLinkage, Name, IR::Module.get());
 
     unsigned Idx = 0;
     for (auto & Arg : F->args())
@@ -82,7 +89,7 @@ llvm::Function * PrototypeAST::codegen() {
 
 llvm::Function * FunctionAST::codegen() {
 
-    llvm::Function * TheFunction = AST::Module->getFunction(Proto->getName());
+    llvm::Function * TheFunction = IR::Module->getFunction(Proto->getName());
 
     if (!TheFunction)
         TheFunction = Proto->codegen();
@@ -90,15 +97,15 @@ llvm::Function * FunctionAST::codegen() {
     if (!TheFunction->empty())
         return (llvm::Function * ) Log::LogErrorV("Function cannot be redefined.");
 
-    llvm::BasicBlock * BB = llvm::BasicBlock::Create(*AST::Context, "entry", TheFunction);
-    AST::Builder->SetInsertPoint(BB);
+    llvm::BasicBlock * BB = llvm::BasicBlock::Create(*IR::Context, "entry", TheFunction);
+    IR::Builder->SetInsertPoint(BB);
 
-    AST::NamedValues.clear();
+    IR::NamedValues.clear();
     for (auto &Arg : TheFunction->args())
-        AST::NamedValues[std::string(Arg.getName())] = &Arg;
+        IR::NamedValues[std::string(Arg.getName())] = &Arg;
 
     if (llvm::Value * RetVal = Body->codegen()) {
-        AST::Builder->CreateRet(RetVal);
+        IR::Builder->CreateRet(RetVal);
 
         llvm::verifyFunction(*TheFunction);
 

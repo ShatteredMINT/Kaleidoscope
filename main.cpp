@@ -19,12 +19,6 @@
 // DRIVER
 //===-----------------------------------------
 
-static void InitializeModule() {
-    AST::Context = std::make_unique<llvm::LLVMContext>();
-    AST::Module = std::make_unique<llvm::Module>("My cool JIT", *AST::Context);
-    AST::Builder = std::make_unique<llvm::IRBuilder<>>(*AST::Context);
-}
-
 static void HandleDefinition() {
     if (auto FnAST = Parser::ParseDefinition()) {
         if (auto * FnIR = FnAST->codegen()) {
@@ -94,11 +88,11 @@ int main() {
     fprintf(stderr, "ready> ");
     Lexer::getNextToken();
 
-    InitializeModule();
+    IR::InitializeModuleAndPassManager();
 
     MainLoop();
 
-    AST::Module->print(llvm::errs(), nullptr);
+    IR::Module->print(llvm::errs(), nullptr);
 
     return 0;
 }
