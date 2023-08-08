@@ -9,6 +9,7 @@
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/Module.h"
+#include "llvm/IR/LegacyPassManager.h"
 
 class IR{
 public:
@@ -16,6 +17,8 @@ public:
     static std::unique_ptr<llvm::IRBuilder<>> Builder;
     static std::unique_ptr<llvm::Module> Module;
     static std::map<std::string, llvm::Value *> NamedValues;
+
+    static std::unique_ptr<llvm::legacy::FunctionPassManager> FPM;
 
     static void InitializeModuleAndPassManager();
 };
