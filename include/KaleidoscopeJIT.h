@@ -76,7 +76,7 @@ public:
     JITTargetMachineBuilder JTMB(
         ES->getExecutorProcessControl().getTargetTriple());
 
-    auto DL = JTMB.getDefaultDataLayoutForTarget();
+   auto DL = JTMB.getDefaultDataLayoutForTarget();
     if (!DL)
       return DL.takeError();
 

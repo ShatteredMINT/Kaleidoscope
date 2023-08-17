@@ -4,6 +4,7 @@
 #include <memory>
 #include <string>
 #include <utility>
+#include <cassert>
 
 #include <algorithm>
 
@@ -73,25 +74,24 @@ static void HandleTopLevelExpression() {
     if (auto FnAST = Parser::ParseTopLevelExpr()) {
         if (auto * FnIR = FnAST->codegen()) {
 
-            auto RT = JIT::TheJIT->getMainJITDylib().createRessourceTracker();
-
-            auto TSM = llvm::ThreadSafeModule(std::move(IR::Module), std::move(IR::Context));
-            JIT::ExitOnErr(JIT::TheJIT->addModule(std::move(TSM), RT));
-            IR::InitializeModuleAndPassManager();
-
-            auto ExprSymbol = JIT::ExitOnErr(JIT::TheJIT->lookup("__anon_expr"));
-            llvm::assert(ExprSymbol && "Function not found");
-
-            double (*FP) () = ExprSymbol.getAddress().toPtr<double (*) ()>();
-            fprintf(stderr, "Evaluated to %f\n", FP());
-
-            JIT::ExitOnErr(RT->remove());
-
             fprintf(stderr, "Read top-level expression:\n");
             FnIR->print(llvm::errs());
             fprintf(stderr, "\n");
 
-            // FnIR->eraseFromParent();
+            auto RT = JIT::TheJIT->getMainJITDylib().createResourceTracker();
+
+            auto TSM = llvm::orc::ThreadSafeModule(std::move(IR::Module), std::move(IR::Context));
+            JIT::ExitOnErr(JIT::TheJIT->addModule(std::move(TSM), RT));
+            IR::InitializeModuleAndPassManager();
+
+            auto ExprSymbol = JIT::ExitOnErr(JIT::TheJIT->lookup("__anon_expr"));
+
+            double (*FP) () = ExprSymbol.getAddress().toPtr<double (*) ()>();
+
+            fprintf(stderr, "Evaluated to %f\n\n", FP());
+
+            JIT::ExitOnErr(RT->remove());
+
         }
     } else {
         Lexer::getNextToken();
@@ -105,7 +105,7 @@ static void MainLoop() {
                 return;
             case ';':
                 Lexer::getNextToken(); // ignore top level smicolons
-                break;
+                continue;
             case tok_def:
                 HandleDefinition();
                 break;
@@ -119,7 +119,6 @@ static void MainLoop() {
         fprintf(stderr, "ready> ");
     }
 }
-
 int main() {
     llvm::InitializeNativeTarget();
     llvm::InitializeNativeTargetAsmPrinter();
@@ -133,11 +132,12 @@ int main() {
     fprintf(stderr, "ready> ");
     Lexer::getNextToken();
 
+    JIT::TheJIT = JIT::ExitOnErr(llvm::orc::KaleidoscopeJIT::Create());
     IR::InitializeModuleAndPassManager();
 
-    JIT::TheJIT = JIT::ExitOnErr(llvm::orc::KaleidoscopeJIT::Create());
-
     MainLoop();
+
+    fprintf(stderr, "\n\n");
 
     IR::Module->print(llvm::errs(), nullptr);
 
