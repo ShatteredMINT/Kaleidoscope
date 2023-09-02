@@ -3,8 +3,6 @@
 #include <vector>
 #include <string>
 
-#include "llvm/IR/Constants.h"
-#include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/Verifier.h"
 #include "llvm/IR/LegacyPassManager.h"
 
