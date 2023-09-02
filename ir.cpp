@@ -2,13 +2,16 @@
 
 #include <memory>
 
+#include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/LegacyPassManager.h"
+
 #include "llvm/Transforms/InstCombine/InstCombine.h"
 #include "llvm/Transforms/Scalar.h"
 #include "llvm/Transforms/Scalar/GVN.h"
 
 #include "jit.h"
+#include "ast.h"
 
 std::unique_ptr<llvm::LLVMContext> IR::Context;
 std::unique_ptr<llvm::IRBuilder<>> IR::Builder;

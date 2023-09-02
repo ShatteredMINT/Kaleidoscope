@@ -1,6 +1,22 @@
 #pragma once
 
-#include "ast.h"
+#include<map>
+#include<memory>
+
+#include "llvm/IR/IRBuilder.h"
+
+namespace llvm {
+    namespace legacy {
+        class FunctionPassManager;
+    };
+
+    class LLVMContext;
+    class Module;
+    class Value;
+    class Function;
+};
+
+class PrototypeAST;
 
 class IR{
 public:

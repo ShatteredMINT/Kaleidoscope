@@ -1,6 +1,6 @@
 #pragma once
-#include <string>
 
+#include <string>
 
 enum Token {
     tok_eof = -1,
@@ -25,7 +25,6 @@ public:
     static std::string IdentifierStr;
     static double NumVal;
     static int CurTok;
-
 
     static int getNextToken();
 

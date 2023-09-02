@@ -1,10 +1,11 @@
-#ifndef PARSER_H
-#define PARSER_H
+#pragma once
 
 #include <memory>
 #include <map>
 
-#include "ast.h"
+class ExprAST;
+class PrototypeAST;
+class FunctionAST;
 
 class Parser {
 public:
@@ -27,5 +28,3 @@ public:
 
     static std::map<char, int> BinopPrecedence;
 };
-
-#endif

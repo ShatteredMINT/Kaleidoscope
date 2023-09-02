@@ -1,23 +1,4 @@
-#include <cctype>
-#include <cstdio>
-#include <cstdlib>
-#include <memory>
-#include <string>
-#include <utility>
-#include <cassert>
-
-#include <algorithm>
-
-#include "llvm/IR/LLVMContext.h"
-#include "llvm/IR/Module.h"
-#include "llvm/IR/IRBuilder.h"
 #include "llvm/Support/TargetSelect.h"
-#include "llvm/Target/TargetMachine.h"
-#include "llvm/IR/LegacyPassManager.h"
-
-#include "llvm/Support/Error.h"
-
-#include "include/KaleidoscopeJIT.h"
 
 #include "ast.h"
 #include "lexer.h"
