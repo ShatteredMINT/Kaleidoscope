@@ -23,6 +23,7 @@
 #include "lexer.h"
 #include "parser.h"
 #include "jit.h"
+#include "ir.h"
 
 #ifdef _WIN32
 #define DLLEXPORT __declspec(dllexport)
@@ -52,6 +53,9 @@ static void HandleDefinition() {
             fprintf(stderr, "Read function definition:\n");
             FnIR->print(llvm::errs());
             fprintf(stderr, "\n");
+
+            JIT::ExitOnErr(JIT::TheJIT->addModule(llvm::orc::ThreadSafeModule(std::move(IR::Module), std::move(IR::Context))));
+            IR::InitializeModuleAndPassManager();
         }
     } else {
         Lexer::getNextToken();
@@ -59,11 +63,13 @@ static void HandleDefinition() {
 }
 
 static void HandleExtern() {
-    if (auto FnAST = Parser::ParseExtern()) {
-        if (auto * FnIR = FnAST->codegen()) {
+    if (auto ProtoAST = Parser::ParseExtern()) {
+        if (auto * FnIR = ProtoAST->codegen()) {
             fprintf(stderr, "Read extern:\n");
             FnIR->print(llvm::errs());
             fprintf(stderr, "\n");
+
+            IR::FunctionProtos[ProtoAST->getName()] = std::move(ProtoAST);
         }
     } else {
         Lexer::getNextToken();
@@ -136,10 +142,6 @@ int main() {
     IR::InitializeModuleAndPassManager();
 
     MainLoop();
-
-    fprintf(stderr, "\n\n");
-
-    IR::Module->print(llvm::errs(), nullptr);
 
     return 0;
 }

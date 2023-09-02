@@ -15,31 +15,7 @@
 
 #include "log.h"
 #include "jit.h"
-
-std::unique_ptr<llvm::LLVMContext> IR::Context;
-std::unique_ptr<llvm::IRBuilder<>> IR::Builder;
-std::unique_ptr<llvm::Module> IR::Module;
-std::map<std::string, llvm::Value *> IR::NamedValues;
-
-std::unique_ptr<llvm::legacy::FunctionPassManager> IR::FPM;
-
-void IR::InitializeModuleAndPassManager() {
-    Context = std::make_unique<llvm::LLVMContext>();
-    Module = std::make_unique<llvm::Module>("My cool JIT", *IR::Context);
-
-    Module->setDataLayout(JIT::TheJIT->getDataLayout());
-
-    Builder = std::make_unique<llvm::IRBuilder<>>(*IR::Context);
-
-    FPM = std::make_unique<llvm::legacy::FunctionPassManager>(Module.get());
-
-    FPM->add(llvm::createInstructionCombiningPass());
-    FPM->add(llvm::createReassociatePass());
-    FPM->add(llvm::createGVNPass());
-    FPM->add(llvm::createCFGSimplificationPass());
-
-    FPM->doInitialization();
-}
+#include "ir.h"
 
 
 llvm::Value * NumberExprAST::codegen() {
@@ -77,7 +53,7 @@ llvm::Value * BinaryExprAST::codegen() {
 }
 
 llvm::Value * CallExprAST::codegen() {
-    llvm::Function * CalleeF = IR::Module->getFunction(Callee);
+    llvm::Function * CalleeF = IR::getFunction(Callee);
     if (!CalleeF)
         return Log::LogErrorV("unknown function referenced");
 
@@ -109,10 +85,10 @@ llvm::Function * PrototypeAST::codegen() {
 
 llvm::Function * FunctionAST::codegen() {
 
-    llvm::Function * TheFunction = IR::Module->getFunction(Proto->getName());
+    auto &P = *Proto;
+    IR::FunctionProtos[Proto->getName()] = std::move(Proto);
+    llvm::Function * TheFunction = IR::getFunction(P.getName());
 
-    if (!TheFunction)
-        TheFunction = Proto->codegen();
     if (!TheFunction) return nullptr;
     if (!TheFunction->empty())
         return (llvm::Function * ) Log::LogErrorV("Function cannot be redefined.");
