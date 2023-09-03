@@ -6,12 +6,12 @@
 
 #include "ast.h"
 
-std::unique_ptr<ExprAST> Log::LogError(const char *Str) {
+std::unique_ptr<AST::ExprAST> Log::LogError(const char *Str) {
     fprintf(stderr, "Error: %s\n", Str);
     return nullptr;
 }
 
-std::unique_ptr<PrototypeAST> Log::LogErrorP(const char *Str) {
+std::unique_ptr<AST::PrototypeAST> Log::LogErrorP(const char *Str) {
     LogError(Str);
     return nullptr;
 }

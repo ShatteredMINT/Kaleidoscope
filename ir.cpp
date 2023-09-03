@@ -15,7 +15,7 @@ std::unique_ptr<llvm::LLVMContext> IR::Context;
 std::unique_ptr<llvm::IRBuilder<>> IR::Builder;
 std::unique_ptr<llvm::Module> IR::Module;
 std::map<std::string, llvm::Value *> IR::NamedValues;
-std::map<std::string, std::unique_ptr<PrototypeAST>> IR::FunctionProtos;
+std::map<std::string, std::unique_ptr<AST::PrototypeAST>> IR::FunctionProtos;
 
 std::unique_ptr<llvm::legacy::FunctionPassManager> IR::FPM;
 

@@ -9,13 +9,13 @@
 
 std::map<char, int> Parser::BinopPrecedence;
 
-std::unique_ptr<ExprAST> Parser::ParseNumberExpr() {
-    auto Result = std::make_unique<NumberExprAST>(Lexer::NumVal);
+std::unique_ptr<AST::ExprAST> Parser::ParseNumberExpr() {
+    auto Result = std::make_unique<AST::NumberExprAST>(Lexer::NumVal);
     Lexer::getNextToken();
     return std::move(Result);
 }
 
-std::unique_ptr<ExprAST> Parser::ParseParenExpr() {
+std::unique_ptr<AST::ExprAST> Parser::ParseParenExpr() {
     Lexer::getNextToken(); //eat '('
     auto V = ParseExpression();
     if (!V)
@@ -27,14 +27,14 @@ std::unique_ptr<ExprAST> Parser::ParseParenExpr() {
     return V;
 }
 
-std::unique_ptr<ExprAST> Parser::ParseIdentifierExpr() {
+std::unique_ptr<AST::ExprAST> Parser::ParseIdentifierExpr() {
     std::string IdName = Lexer::IdentifierStr;
     Lexer::getNextToken(); //eat identifier
 
     if (Lexer::CurTok != '(') //simple variable ref
-        return std::make_unique<VariableExprAST>(IdName);
+        return std::make_unique<AST::VariableExprAST>(IdName);
 
-    std::vector<std::unique_ptr<ExprAST>> Args;
+    std::vector<std::unique_ptr<AST::ExprAST>> Args;
 
     while (Lexer::CurTok != ')') { // TODO deviate from tutorial
         Lexer::getNextToken();
@@ -66,11 +66,11 @@ std::unique_ptr<ExprAST> Parser::ParseIdentifierExpr() {
 
     Lexer::getNextToken(); // eat the ')'
 
-    return std::make_unique<CallExprAST>(IdName, std::move(Args));
+    return std::make_unique<AST::CallExprAST>(IdName, std::move(Args));
 }
 
 
-std::unique_ptr<ExprAST> Parser::ParsePrimary() {
+std::unique_ptr<AST::ExprAST> Parser::ParsePrimary() {
     switch (Lexer::CurTok) {
         default:
             return Log::LogError("unknown token when expecting an expression");
@@ -93,7 +93,7 @@ int Parser::GetTokPrecedence() {
     return TokPrec;
 }
 
-std::unique_ptr<ExprAST> Parser::ParseBinOpRHS(int ExprPrec, std::unique_ptr<ExprAST> LHS) {
+std::unique_ptr<AST::ExprAST> Parser::ParseBinOpRHS(int ExprPrec, std::unique_ptr<AST::ExprAST> LHS) {
     while (true) {
         int TokPrec = GetTokPrecedence();
 
@@ -114,18 +114,18 @@ std::unique_ptr<ExprAST> Parser::ParseBinOpRHS(int ExprPrec, std::unique_ptr<Exp
                 return nullptr;
         }
 
-        LHS = std::make_unique<BinaryExprAST>(BinOp, std::move(LHS), std::move(RHS));
+        LHS = std::make_unique<AST::BinaryExprAST>(BinOp, std::move(LHS), std::move(RHS));
     }
 }
 
-std::unique_ptr<ExprAST> Parser::ParseExpression() {
+std::unique_ptr<AST::ExprAST> Parser::ParseExpression() {
     auto LHS = ParsePrimary();
     if (!LHS) return nullptr;
 
     return ParseBinOpRHS(0, std::move(LHS));
 }
 
-std::unique_ptr<PrototypeAST> Parser::ParsePrototype() {
+std::unique_ptr<AST::PrototypeAST> Parser::ParsePrototype() {
     if (Lexer::CurTok != tok_identifier)
         return Log::LogErrorP("Exprected function name in prototype");
 
@@ -143,29 +143,29 @@ std::unique_ptr<PrototypeAST> Parser::ParsePrototype() {
 
     Lexer::getNextToken(); // eat ')'
 
-    return std::make_unique<PrototypeAST>(FnName, std::move(ArgNames));
+    return std::make_unique<AST::PrototypeAST>(FnName, std::move(ArgNames));
 }
 
-std::unique_ptr<FunctionAST> Parser::ParseDefinition() {
+std::unique_ptr<AST::FunctionAST> Parser::ParseDefinition() {
     Lexer::getNextToken(); // eat def
     auto Proto = ParsePrototype();
     if (!Proto) return nullptr;
 
     if (auto E = ParseExpression())
-        return std::make_unique<FunctionAST>(std::move(Proto), std::move(E));
+        return std::make_unique<AST::FunctionAST>(std::move(Proto), std::move(E));
 
     return nullptr;
 }
 
-std::unique_ptr<PrototypeAST> Parser::ParseExtern() {
+std::unique_ptr<AST::PrototypeAST> Parser::ParseExtern() {
     Lexer::getNextToken(); //eat extern
     return ParsePrototype();
 }
 
-std::unique_ptr<FunctionAST> Parser::ParseTopLevelExpr()  {
+std::unique_ptr<AST::FunctionAST> Parser::ParseTopLevelExpr()  {
     if (auto E = ParseExpression()) {
-        auto Proto = std::make_unique<PrototypeAST>("__anon_expr", std::vector<std::string>());
-        return std::make_unique<FunctionAST>(std::move(Proto), std::move(E));
+        auto Proto = std::make_unique<AST::PrototypeAST>("__anon_expr", std::vector<std::string>());
+        return std::make_unique<AST::FunctionAST>(std::move(Proto), std::move(E));
     }
 
     return nullptr;

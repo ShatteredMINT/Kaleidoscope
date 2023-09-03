@@ -9,7 +9,7 @@
 #include "log.h"
 #include "ir.h"
 
-
+namespace AST {
 llvm::Value * NumberExprAST::codegen() {
     return llvm::ConstantFP::get(*IR::Context, llvm::APFloat(Val));
 }
@@ -105,3 +105,4 @@ llvm::Function * FunctionAST::codegen() {
     TheFunction->eraseFromParent();
     return nullptr;
 }
+}; //AST

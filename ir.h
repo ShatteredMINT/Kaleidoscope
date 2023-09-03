@@ -16,7 +16,9 @@ namespace llvm {
     class Function;
 };
 
-class PrototypeAST;
+namespace AST{
+    class PrototypeAST;
+};
 
 class IR{
 public:
@@ -24,7 +26,7 @@ public:
     static std::unique_ptr<llvm::IRBuilder<>> Builder;
     static std::unique_ptr<llvm::Module> Module;
     static std::map<std::string, llvm::Value *> NamedValues;
-    static std::map<std::string, std::unique_ptr<PrototypeAST>> FunctionProtos;
+    static std::map<std::string, std::unique_ptr<AST::PrototypeAST>> FunctionProtos;
 
     static std::unique_ptr<llvm::legacy::FunctionPassManager> FPM;
 

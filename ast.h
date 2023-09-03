@@ -9,6 +9,8 @@ namespace llvm {
     class Function;
 };
 
+namespace AST {
+
 class ExprAST {
 public:
     virtual ~ExprAST() = default;
@@ -71,3 +73,4 @@ public:
 
     llvm::Function * codegen();
 };
+}; //AST
