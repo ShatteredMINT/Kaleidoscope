@@ -18,7 +18,7 @@ llvm::Value * VariableExprAST::codegen() {
     llvm::Value *V = IR::NamedValues[Name];
 
     if (!V)
-        return Log::LogErrorV("Unknonw Variable name");
+        return Log::LogError<llvm::Value*>("Unknonw Variable name");
 
     return V;
 }
@@ -40,17 +40,17 @@ llvm::Value * BinaryExprAST::codegen() {
             return IR::Builder->CreateUIToFP(L, llvm::Type::getDoubleTy(*IR::Context), "booltmp");
 
         default:
-            return Log::LogErrorV("invalid binary operator");
+            return Log::LogError<llvm::Value*>("invalid binary operator");
     }
 }
 
 llvm::Value * CallExprAST::codegen() {
     llvm::Function * CalleeF = IR::getFunction(Callee);
     if (!CalleeF)
-        return Log::LogErrorV("unknown function referenced");
+        return Log::LogError<llvm::Value*>("unknown function referenced");
 
     if (CalleeF->arg_size() != Args.size())
-        return Log::LogErrorV("Incorrect number of arguments passed");
+        return Log::LogError<llvm::Value*>("Incorrect number of arguments passed");
 
     std::vector<llvm::Value *> ArgsV;
     for (unsigned i = 0, e = Args.size(); i != e; ++i) {
@@ -83,7 +83,7 @@ llvm::Function * FunctionAST::codegen() {
 
     if (!TheFunction) return nullptr;
     if (!TheFunction->empty())
-        return (llvm::Function * ) Log::LogErrorV("Function cannot be redefined.");
+        return (llvm::Function * ) Log::LogError<llvm::Value*>("Function cannot be redefined.");
 
     llvm::BasicBlock * BB = llvm::BasicBlock::Create(*IR::Context, "entry", TheFunction);
     IR::Builder->SetInsertPoint(BB);
