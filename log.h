@@ -1,15 +1,11 @@
 #pragma once
 
-#include <memory>
+#include <string>
 
-namespace llvm {class Value;};
-
-namespace AST {
-    class ExprAST;
-    class PrototypeAST;
-};
 namespace Log {
-    std::unique_ptr<AST::ExprAST> LogError(const char *Str);
-    std::unique_ptr<AST::PrototypeAST> LogErrorP(const char *Str);
-    llvm::Value * LogErrorV(const char * Str);
+    template<typename T>
+    T LogError(const char * Str) {
+        fprintf(stderr, "Error: %s\n", Str);
+        return nullptr;
+    }
 };
