@@ -3,8 +3,8 @@
 
 #include "include/KaleidoscopeJIT.h"
 
-struct JIT {
-    static std::unique_ptr<llvm::orc::KaleidoscopeJIT> TheJIT;
-    static llvm::ExitOnError ExitOnErr;
+namespace JIT {
+    extern std::unique_ptr<llvm::orc::KaleidoscopeJIT> TheJIT;
+    extern llvm::ExitOnError ExitOnErr;
 
 };

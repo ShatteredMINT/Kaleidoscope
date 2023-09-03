@@ -19,14 +19,12 @@ enum Token {
     tok_else = -8,
 };
 
-class Lexer {
+namespace Lexer {
+    extern std::string IdentifierStr;
+    extern double NumVal;
+    extern int CurTok;
 
-public:
-    static std::string IdentifierStr;
-    static double NumVal;
-    static int CurTok;
+    int getNextToken();
 
-    static int getNextToken();
-
-    static int gettok();;
+    int gettok();;
 };
