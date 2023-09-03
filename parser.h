@@ -9,24 +9,23 @@ namespace AST {
     class FunctionAST;
 };
 
-class Parser {
-public:
-    static std::unique_ptr<AST::ExprAST> ParseExpression();
-    static std::unique_ptr<AST::ExprAST> ParseNumberExpr();
-    static std::unique_ptr<AST::ExprAST> ParseParenExpr();
-    static std::unique_ptr<AST::ExprAST> ParseIdentifierExpr();
+namespace Parser {
+     std::unique_ptr<AST::ExprAST> ParseExpression();
+     std::unique_ptr<AST::ExprAST> ParseNumberExpr();
+     std::unique_ptr<AST::ExprAST> ParseParenExpr();
+     std::unique_ptr<AST::ExprAST> ParseIdentifierExpr();
 
-    static std::unique_ptr<AST::ExprAST> ParsePrimary();
-    static std::unique_ptr<AST::ExprAST> ParseBinOpRHS(int ExprPrec, std::unique_ptr<AST::ExprAST> LHS);
+     std::unique_ptr<AST::ExprAST> ParsePrimary();
+     std::unique_ptr<AST::ExprAST> ParseBinOpRHS(int ExprPrec, std::unique_ptr<AST::ExprAST> LHS);
 
-    static std::unique_ptr<AST::PrototypeAST> ParsePrototype();
-    static std::unique_ptr<AST::FunctionAST> ParseDefinition();
-    static std::unique_ptr<AST::PrototypeAST> ParseExtern();
-    static std::unique_ptr<AST::FunctionAST> ParseTopLevelExpr();
-
-
-    static int GetTokPrecedence();
+     std::unique_ptr<AST::PrototypeAST> ParsePrototype();
+     std::unique_ptr<AST::FunctionAST> ParseDefinition();
+     std::unique_ptr<AST::PrototypeAST> ParseExtern();
+     std::unique_ptr<AST::FunctionAST> ParseTopLevelExpr();
 
 
-    static std::map<char, int> BinopPrecedence;
+     int GetTokPrecedence();
+
+
+     extern std::map<char, int> BinopPrecedence;
 };

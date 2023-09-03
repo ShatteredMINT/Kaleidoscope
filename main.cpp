@@ -111,11 +111,6 @@ int main() {
     llvm::InitializeNativeTargetAsmPrinter();
     llvm::InitializeNativeTargetAsmParser();
 
-    Parser::BinopPrecedence['<'] = 10;
-    Parser::BinopPrecedence['+'] = 20;
-    Parser::BinopPrecedence['-'] = 20;
-    Parser::BinopPrecedence['*'] = 40;
-
     fprintf(stderr, "ready> ");
     Lexer::getNextToken();
 

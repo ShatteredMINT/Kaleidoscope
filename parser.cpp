@@ -7,7 +7,12 @@
 #include "lexer.h"
 #include "log.h"
 
-std::map<char, int> Parser::BinopPrecedence;
+std::map<char, int> Parser::BinopPrecedence = {
+    {'<', 10},
+    {'+', 20},
+    {'-', 20},
+    {'*', 40}
+};
 
 std::unique_ptr<AST::ExprAST> Parser::ParseNumberExpr() {
     auto Result = std::make_unique<AST::NumberExprAST>(Lexer::NumVal);
@@ -22,7 +27,7 @@ std::unique_ptr<AST::ExprAST> Parser::ParseParenExpr() {
         return nullptr;
 
     if (Lexer::CurTok != ')')
-        return Log::LogError("expected ')'");
+        return Log::LogError<std::unique_ptr<AST::ExprAST>>("expected ')'");
     Lexer::getNextToken();
     return V;
 }
@@ -44,7 +49,7 @@ std::unique_ptr<AST::ExprAST> Parser::ParseIdentifierExpr() {
             return nullptr;
 
         if (Lexer::CurTok != ',' && Lexer::CurTok != ')')
-            return Log::LogError("Expected ')' or ',' in argument list");
+            return Log::LogError<std::unique_ptr<AST::ExprAST>>("Expected ')' or ',' in argument list");
     }
 
     // Call
@@ -73,7 +78,7 @@ std::unique_ptr<AST::ExprAST> Parser::ParseIdentifierExpr() {
 std::unique_ptr<AST::ExprAST> Parser::ParsePrimary() {
     switch (Lexer::CurTok) {
         default:
-            return Log::LogError("unknown token when expecting an expression");
+            return Log::LogError<std::unique_ptr<AST::ExprAST>>("unknown token when expecting an expression");
         case tok_identifier:
             return ParseIdentifierExpr();
         case tok_number:
@@ -127,19 +132,19 @@ std::unique_ptr<AST::ExprAST> Parser::ParseExpression() {
 
 std::unique_ptr<AST::PrototypeAST> Parser::ParsePrototype() {
     if (Lexer::CurTok != tok_identifier)
-        return Log::LogErrorP("Exprected function name in prototype");
+        return Log::LogError<std::unique_ptr<AST::PrototypeAST>>("Exprected function name in prototype");
 
     std::string FnName = Lexer::IdentifierStr;
     Lexer::getNextToken();
 
     if (Lexer::CurTok != '(')
-        return Log::LogErrorP("Expected '(' in prototype");
+        return Log::LogError<std::unique_ptr<AST::PrototypeAST>>("Expected '(' in prototype");
 
     std::vector<std::string> ArgNames;
     while (Lexer::getNextToken() == tok_identifier)
         ArgNames.push_back(Lexer::IdentifierStr);
     if (Lexer::CurTok != ')')
-        return Log::LogErrorP("Expected ')' in prototype");
+        return Log::LogError<std::unique_ptr<AST::PrototypeAST>>("Expected ')' in prototype");
 
     Lexer::getNextToken(); // eat ')'
 
