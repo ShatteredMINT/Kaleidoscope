@@ -85,6 +85,8 @@ std::unique_ptr<AST::ExprAST> Parser::ParsePrimary() {
             return ParseNumberExpr();
         case '(':
             return ParseParenExpr();
+        case tok_if:
+            return ParseIfExpr();
     }
 }
 
@@ -121,6 +123,30 @@ std::unique_ptr<AST::ExprAST> Parser::ParseBinOpRHS(int ExprPrec, std::unique_pt
 
         LHS = std::make_unique<AST::BinaryExprAST>(BinOp, std::move(LHS), std::move(RHS));
     }
+}
+
+std::unique_ptr<AST::ExprAST> Parser::ParseIfExpr() {
+    Lexer::getNextToken(); //eat IF
+
+    auto Cond = ParseExpression();
+    if (!Cond) return nullptr;
+
+    if (Lexer::CurTok != tok_then)
+        return Log::LogError<std::unique_ptr<AST::ExprAST>>("Expected then!");
+    Lexer::getNextToken(); //eat THEN
+
+    auto Then = ParseExpression();
+    if (!Then) return nullptr;
+
+    if (Lexer::CurTok != tok_else)
+        return Log::LogError<std::unique_ptr<AST::ExprAST>>("Expected else!");
+
+    Lexer::getNextToken();
+
+    auto Else = ParseExpression();
+    if (!Else) return nullptr;
+
+    return std::make_unique<AST::IfExprAST>(std::move(Cond), std::move(Then), std::move(Else));
 }
 
 std::unique_ptr<AST::ExprAST> Parser::ParseExpression() {

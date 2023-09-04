@@ -17,6 +17,7 @@ namespace Parser {
 
      std::unique_ptr<AST::ExprAST> ParsePrimary();
      std::unique_ptr<AST::ExprAST> ParseBinOpRHS(int ExprPrec, std::unique_ptr<AST::ExprAST> LHS);
+     std::unique_ptr<AST::ExprAST> ParseIfExpr();
 
      std::unique_ptr<AST::PrototypeAST> ParsePrototype();
      std::unique_ptr<AST::FunctionAST> ParseDefinition();

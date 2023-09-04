@@ -44,6 +44,51 @@ llvm::Value * BinaryExprAST::codegen() {
     }
 }
 
+llvm::Value * IfExprAST::codegen() {
+    llvm::Value * CondV = Cond->codegen();
+    if (!CondV) return nullptr;
+
+    CondV = IR::Builder->CreateFCmpONE(CondV, llvm::ConstantFP::get(*IR::Context, llvm::APFloat(0.0)), "ifcond");
+
+    llvm::Function * TheFunction = IR::Builder->GetInsertBlock()->getParent();
+
+    llvm::BasicBlock * ThenBB = llvm::BasicBlock::Create(*IR::Context, "then", TheFunction);
+    llvm::BasicBlock * ElseBB = llvm::BasicBlock::Create(*IR::Context, "else");
+    llvm::BasicBlock * MergeBB = llvm::BasicBlock::Create(*IR::Context, "ifcont");
+
+    IR::Builder->CreateCondBr(CondV, ThenBB, ElseBB);
+
+    // THEN
+    IR::Builder->SetInsertPoint(ThenBB);
+
+    llvm::Value * ThenV = Then->codegen();
+    if (!ThenV) return nullptr;
+
+    IR::Builder->CreateBr(MergeBB);
+    ThenBB = IR::Builder->GetInsertBlock();
+
+
+    // ELSE
+    TheFunction->insert(TheFunction->end(), ElseBB);
+    IR::Builder->SetInsertPoint(ElseBB);
+
+    llvm::Value * ElseV = Else->codegen();
+    if (!ElseV) return nullptr;
+
+    IR::Builder->CreateBr(MergeBB);
+
+    ElseBB = IR::Builder->GetInsertBlock();
+
+    // CONTINUE
+    TheFunction->insert(TheFunction->end(), MergeBB);
+    IR::Builder->SetInsertPoint(MergeBB);
+    llvm::PHINode * PN = IR::Builder->CreatePHI(llvm::Type::getDoubleTy(*IR::Context), 2, "iftmp");
+
+    PN->addIncoming(ThenV, ThenBB);
+    PN->addIncoming(ElseV, ElseBB);
+    return PN;
+}
+
 llvm::Value * CallExprAST::codegen() {
     llvm::Function * CalleeF = IR::getFunction(Callee);
     if (!CalleeF)
