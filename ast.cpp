@@ -89,6 +89,60 @@ llvm::Value * IfExprAST::codegen() {
     return PN;
 }
 
+llvm::Value * ForExprAST::codegen() {
+    llvm::Value * StartV = Start->codegen();
+    if (!StartV) return nullptr;
+
+    llvm::Function * TheFunction = IR::Builder->GetInsertBlock()->getParent();
+    llvm::BasicBlock * PreheaderBB = IR::Builder->GetInsertBlock();
+    llvm::BasicBlock * LoopBB = llvm::BasicBlock::Create(*IR::Context, "loop", TheFunction);
+
+    IR::Builder->CreateBr(LoopBB);
+
+    IR::Builder->SetInsertPoint(LoopBB);
+
+    llvm::PHINode * Variable = IR::Builder->CreatePHI(llvm::Type::getDoubleTy(*IR::Context), 2, VarName);
+    Variable->addIncoming(StartV, PreheaderBB);
+
+    llvm::Value * OldVal = IR::NamedValues[VarName];
+    IR::NamedValues[VarName] = Variable;
+
+    if (!Body->codegen()) return nullptr;
+
+    llvm::Value * StepVal = nullptr;
+
+    if (Step) {
+        StepVal = Step->codegen();
+        if (!StepVal) return nullptr;
+    } else {
+        StepVal = llvm::ConstantFP::get(*IR::Context, llvm::APFloat(1.0));
+    }
+
+    llvm::Value * NextVar = IR::Builder->CreateFAdd(Variable, StepVal, "nextvar");
+
+    llvm::Value * EndCond = End->codegen();
+    if (!EndCond)
+        return nullptr;
+
+    EndCond = IR::Builder->CreateFCmpONE(EndCond, llvm::ConstantFP::get(*IR::Context, llvm::APFloat(0.0)), "loopcond");
+
+    llvm::BasicBlock * LoopEndBB = IR::Builder->GetInsertBlock();
+    llvm::BasicBlock * AfterBB = llvm::BasicBlock::Create(*IR::Context, "afterloop", TheFunction);
+
+    IR::Builder->CreateCondBr(EndCond, LoopBB, AfterBB);
+
+    IR::Builder->SetInsertPoint(AfterBB);
+
+    Variable->addIncoming(NextVar, LoopEndBB);
+
+    if (OldVal)
+        IR::NamedValues[VarName] = OldVal;
+    else
+        IR::NamedValues.erase(VarName);
+
+    return llvm::Constant::getNullValue(llvm::Type::getDoubleTy(*IR::Context));
+}
+
 llvm::Value * CallExprAST::codegen() {
     llvm::Function * CalleeF = IR::getFunction(Callee);
     if (!CalleeF)

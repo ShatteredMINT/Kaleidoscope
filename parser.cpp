@@ -87,6 +87,8 @@ std::unique_ptr<AST::ExprAST> Parser::ParsePrimary() {
             return ParseParenExpr();
         case tok_if:
             return ParseIfExpr();
+        case tok_for:
+            return ParseForExpr();
     }
 }
 
@@ -147,6 +149,46 @@ std::unique_ptr<AST::ExprAST> Parser::ParseIfExpr() {
     if (!Else) return nullptr;
 
     return std::make_unique<AST::IfExprAST>(std::move(Cond), std::move(Then), std::move(Else));
+}
+
+std::unique_ptr<AST::ExprAST> Parser::ParseForExpr() {
+    Lexer::getNextToken(); //eat FOR
+
+    if (Lexer::CurTok != tok_identifier)
+        return Log::LogError<std::unique_ptr<AST::ExprAST>>("expected identifier after for");
+
+    std::string IdName = Lexer::IdentifierStr;
+    Lexer::getNextToken(); //eat identifier
+
+    if (Lexer::CurTok != '=')
+        return Log::LogError<std::unique_ptr<AST::ExprAST>>("expected '=' after for");
+    Lexer::getNextToken(); //eat =
+
+    auto Start = ParseExpression();
+    if (!Start) return nullptr;
+    if (Lexer::CurTok != ',')
+        return Log::LogError<std::unique_ptr<AST::ExprAST>>("expected ',' after for start value");
+    Lexer::getNextToken(); //eat ','
+
+    auto End = ParseExpression();
+    if (!End) return nullptr;
+
+    // STEP is optional
+    std::unique_ptr<AST::ExprAST> Step;
+    if (Lexer::CurTok == ',') {
+        Lexer::getNextToken();
+        Step = ParseExpression();
+        if (!Step) return nullptr;
+    }
+
+    if (Lexer::CurTok != tok_in)
+        return Log::LogError<std::unique_ptr<AST::ExprAST>>("expected 'in' after for");
+    Lexer::getNextToken(); // eat 'in'
+
+    auto Body = ParseExpression();
+    if (!Body) return nullptr;
+
+    return std::make_unique<AST::ForExprAST>(IdName, std::move(Start), std::move(End), std::move(Step), std::move(Body));
 }
 
 std::unique_ptr<AST::ExprAST> Parser::ParseExpression() {
