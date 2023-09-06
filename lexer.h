@@ -22,10 +22,14 @@ enum Token {
 };
 
 namespace Lexer {
+    /**contains currently parsed string*/
     extern std::string IdentifierStr;
+    /**numerical value of current string*/
     extern double NumVal;
+    /**current token*/
     extern int CurTok;
 
+    /**helper to grab current token and store it*/
     int getNextToken();
 
     int gettok();;

@@ -8,7 +8,7 @@ namespace AST {
     class PrototypeAST;
     class FunctionAST;
 };
-
+/**handle everything related to parsing the source code*/
 namespace Parser {
      std::unique_ptr<AST::ExprAST> ParseExpression();
      std::unique_ptr<AST::ExprAST> ParseNumberExpr();
@@ -16,6 +16,7 @@ namespace Parser {
      std::unique_ptr<AST::ExprAST> ParseIdentifierExpr();
 
      std::unique_ptr<AST::ExprAST> ParsePrimary();
+     /**recursivly evaluetes complex expressions into ordered parts*/
      std::unique_ptr<AST::ExprAST> ParseBinOpRHS(int ExprPrec, std::unique_ptr<AST::ExprAST> LHS);
      std::unique_ptr<AST::ExprAST> ParseIfExpr();
      std::unique_ptr<AST::ExprAST> ParseForExpr();
@@ -26,8 +27,10 @@ namespace Parser {
      std::unique_ptr<AST::FunctionAST> ParseTopLevelExpr();
 
 
+     /**get precedence of current binary operrator*/
      int GetTokPrecedence();
 
 
+     /**list of precedence of implemented operators*/
      extern std::map<char, int> BinopPrecedence;
 };

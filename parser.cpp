@@ -36,12 +36,16 @@ std::unique_ptr<AST::ExprAST> Parser::ParseIdentifierExpr() {
     std::string IdName = Lexer::IdentifierStr;
     Lexer::getNextToken(); //eat identifier
 
-    if (Lexer::CurTok != '(') //simple variable ref
+    // simple variable use
+    if (Lexer::CurTok != '(')
         return std::make_unique<AST::VariableExprAST>(IdName);
 
+    // function call
+    // parse Args
     std::vector<std::unique_ptr<AST::ExprAST>> Args;
 
-    while (Lexer::CurTok != ')') { // TODO deviate from tutorial
+    // REMINDER deviate from tutorial
+    while (Lexer::CurTok != ')') {
         Lexer::getNextToken();
         if (auto Arg = ParseExpression())
             Args.push_back(std::move(Arg));
@@ -52,6 +56,7 @@ std::unique_ptr<AST::ExprAST> Parser::ParseIdentifierExpr() {
             return Log::LogError<std::unique_ptr<AST::ExprAST>>("Expected ')' or ',' in argument list");
     }
 
+    // Reference implementation
     // Call
     // Lexer::getNextToken(); //eat '('
     // if (Lexer::CurTok != ')') {
@@ -106,9 +111,11 @@ std::unique_ptr<AST::ExprAST> Parser::ParseBinOpRHS(int ExprPrec, std::unique_pt
     while (true) {
         int TokPrec = GetTokPrecedence();
 
+        // existing value needs to be parsed first
         if (TokPrec < ExprPrec)
             return LHS;
 
+        // parse next expression
         int BinOp = Lexer::CurTok;
         Lexer::getNextToken(); // eat binop
 
@@ -116,6 +123,7 @@ std::unique_ptr<AST::ExprAST> Parser::ParseBinOpRHS(int ExprPrec, std::unique_pt
         if (!RHS)
             return nullptr;
 
+        // next operation need to be parsed first
         int NextPrec = GetTokPrecedence();
         if (TokPrec < NextPrec) {
             RHS = ParseBinOpRHS(TokPrec + 1, std::move(RHS));
@@ -123,6 +131,7 @@ std::unique_ptr<AST::ExprAST> Parser::ParseBinOpRHS(int ExprPrec, std::unique_pt
                 return nullptr;
         }
 
+        // add node to tree
         LHS = std::make_unique<AST::BinaryExprAST>(BinOp, std::move(LHS), std::move(RHS));
     }
 }
@@ -130,9 +139,11 @@ std::unique_ptr<AST::ExprAST> Parser::ParseBinOpRHS(int ExprPrec, std::unique_pt
 std::unique_ptr<AST::ExprAST> Parser::ParseIfExpr() {
     Lexer::getNextToken(); //eat IF
 
+    // COND
     auto Cond = ParseExpression();
     if (!Cond) return nullptr;
 
+    // THEN
     if (Lexer::CurTok != tok_then)
         return Log::LogError<std::unique_ptr<AST::ExprAST>>("Expected then!");
     Lexer::getNextToken(); //eat THEN
@@ -140,6 +151,7 @@ std::unique_ptr<AST::ExprAST> Parser::ParseIfExpr() {
     auto Then = ParseExpression();
     if (!Then) return nullptr;
 
+    // ELSE
     if (Lexer::CurTok != tok_else)
         return Log::LogError<std::unique_ptr<AST::ExprAST>>("Expected else!");
 
@@ -154,6 +166,7 @@ std::unique_ptr<AST::ExprAST> Parser::ParseIfExpr() {
 std::unique_ptr<AST::ExprAST> Parser::ParseForExpr() {
     Lexer::getNextToken(); //eat FOR
 
+    // setup loop variable
     if (Lexer::CurTok != tok_identifier)
         return Log::LogError<std::unique_ptr<AST::ExprAST>>("expected identifier after for");
 
@@ -166,6 +179,8 @@ std::unique_ptr<AST::ExprAST> Parser::ParseForExpr() {
 
     auto Start = ParseExpression();
     if (!Start) return nullptr;
+
+    // setup condition
     if (Lexer::CurTok != ',')
         return Log::LogError<std::unique_ptr<AST::ExprAST>>("expected ',' after for start value");
     Lexer::getNextToken(); //eat ','
@@ -181,6 +196,7 @@ std::unique_ptr<AST::ExprAST> Parser::ParseForExpr() {
         if (!Step) return nullptr;
     }
 
+    // BODY
     if (Lexer::CurTok != tok_in)
         return Log::LogError<std::unique_ptr<AST::ExprAST>>("expected 'in' after for");
     Lexer::getNextToken(); // eat 'in'
@@ -203,11 +219,12 @@ std::unique_ptr<AST::PrototypeAST> Parser::ParsePrototype() {
         return Log::LogError<std::unique_ptr<AST::PrototypeAST>>("Exprected function name in prototype");
 
     std::string FnName = Lexer::IdentifierStr;
-    Lexer::getNextToken();
+    Lexer::getNextToken(); // eat identifier
 
     if (Lexer::CurTok != '(')
         return Log::LogError<std::unique_ptr<AST::PrototypeAST>>("Expected '(' in prototype");
 
+    //TODO extend to expect ',' seperation
     std::vector<std::string> ArgNames;
     while (Lexer::getNextToken() == tok_identifier)
         ArgNames.push_back(Lexer::IdentifierStr);
@@ -237,6 +254,7 @@ std::unique_ptr<AST::PrototypeAST> Parser::ParseExtern() {
 
 std::unique_ptr<AST::FunctionAST> Parser::ParseTopLevelExpr()  {
     if (auto E = ParseExpression()) {
+        // translate expression into anonymous function
         auto Proto = std::make_unique<AST::PrototypeAST>("__anon_expr", std::vector<std::string>());
         return std::make_unique<AST::FunctionAST>(std::move(Proto), std::move(E));
     }

@@ -50,6 +50,7 @@ llvm::Value * IfExprAST::codegen() {
 
     CondV = IR::Builder->CreateFCmpONE(CondV, llvm::ConstantFP::get(*IR::Context, llvm::APFloat(0.0)), "ifcond");
 
+    // set up code block structure
     llvm::Function * TheFunction = IR::Builder->GetInsertBlock()->getParent();
 
     llvm::BasicBlock * ThenBB = llvm::BasicBlock::Create(*IR::Context, "then", TheFunction);
@@ -93,12 +94,14 @@ llvm::Value * ForExprAST::codegen() {
     llvm::Value * StartV = Start->codegen();
     if (!StartV) return nullptr;
 
+    // setup code blocks
     llvm::Function * TheFunction = IR::Builder->GetInsertBlock()->getParent();
     llvm::BasicBlock * PreheaderBB = IR::Builder->GetInsertBlock();
     llvm::BasicBlock * LoopBB = llvm::BasicBlock::Create(*IR::Context, "loop", TheFunction);
 
     IR::Builder->CreateBr(LoopBB);
 
+    // LOOP
     IR::Builder->SetInsertPoint(LoopBB);
 
     llvm::PHINode * Variable = IR::Builder->CreatePHI(llvm::Type::getDoubleTy(*IR::Context), 2, VarName);
@@ -111,6 +114,7 @@ llvm::Value * ForExprAST::codegen() {
 
     llvm::Value * StepVal = nullptr;
 
+    // support optional step size
     if (Step) {
         StepVal = Step->codegen();
         if (!StepVal) return nullptr;
@@ -126,11 +130,14 @@ llvm::Value * ForExprAST::codegen() {
 
     EndCond = IR::Builder->CreateFCmpONE(EndCond, llvm::ConstantFP::get(*IR::Context, llvm::APFloat(0.0)), "loopcond");
 
+
+    // additional code blocks to support branch after iteration
     llvm::BasicBlock * LoopEndBB = IR::Builder->GetInsertBlock();
     llvm::BasicBlock * AfterBB = llvm::BasicBlock::Create(*IR::Context, "afterloop", TheFunction);
 
     IR::Builder->CreateCondBr(EndCond, LoopBB, AfterBB);
 
+    // AFTER
     IR::Builder->SetInsertPoint(AfterBB);
 
     Variable->addIncoming(NextVar, LoopEndBB);
@@ -144,13 +151,16 @@ llvm::Value * ForExprAST::codegen() {
 }
 
 llvm::Value * CallExprAST::codegen() {
+    // check if function exists
     llvm::Function * CalleeF = IR::getFunction(Callee);
     if (!CalleeF)
         return Log::LogError<llvm::Value*>("unknown function referenced");
 
+    // validate call
     if (CalleeF->arg_size() != Args.size())
         return Log::LogError<llvm::Value*>("Incorrect number of arguments passed");
 
+    // construct call
     std::vector<llvm::Value *> ArgsV;
     for (unsigned i = 0, e = Args.size(); i != e; ++i) {
         ArgsV.push_back(Args[i]->codegen());
@@ -180,17 +190,21 @@ llvm::Function * FunctionAST::codegen() {
     IR::FunctionProtos[Proto->getName()] = std::move(Proto);
     llvm::Function * TheFunction = IR::getFunction(P.getName());
 
+    // check if function has prototype
     if (!TheFunction) return nullptr;
     if (!TheFunction->empty())
         return (llvm::Function * ) Log::LogError<llvm::Value*>("Function cannot be redefined.");
 
+    // create root block for cuntion
     llvm::BasicBlock * BB = llvm::BasicBlock::Create(*IR::Context, "entry", TheFunction);
     IR::Builder->SetInsertPoint(BB);
 
+    // make local variables and add args to it
     IR::NamedValues.clear();
     for (auto &Arg : TheFunction->args())
         IR::NamedValues[std::string(Arg.getName())] = &Arg;
 
+    // create function code
     if (llvm::Value * RetVal = Body->codegen()) {
         IR::Builder->CreateRet(RetVal);
 
@@ -201,6 +215,7 @@ llvm::Function * FunctionAST::codegen() {
         return TheFunction;
     }
 
+    // if code generation fails cleanup
     TheFunction->eraseFromParent();
     return nullptr;
 }

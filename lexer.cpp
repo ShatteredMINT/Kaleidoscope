@@ -3,6 +3,7 @@
 #include <cstdio>
 #include <string>
 
+// "initialize"
 std::string Lexer::IdentifierStr;
 double Lexer::NumVal;
 int Lexer::CurTok;
@@ -11,7 +12,6 @@ int Lexer::CurTok;
 int Lexer::gettok() {
     static int LastChar = ' ';
 
-    //skip whitespace
     while (isspace(LastChar))
         LastChar = getchar();
 
@@ -50,6 +50,7 @@ int Lexer::gettok() {
         return tok_number;
     }
 
+    // handle comments
     if (LastChar == '#') {
         do
             LastChar = getchar();
