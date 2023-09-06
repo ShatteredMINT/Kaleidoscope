@@ -18,7 +18,7 @@ llvm::Value * VariableExprAST::codegen() {
     llvm::Value *V = IR::NamedValues[Name];
 
     if (!V)
-        return Log::LogError<llvm::Value*>("Unknonw Variable name");
+        return Log::LogError<llvm::Value*>("Unknown Variable name");
 
     return V;
 }
