@@ -9,6 +9,9 @@ namespace llvm {
     class Function;
 };
 
+/**
+ * contains AST node classes
+ */
 namespace AST {
 
 class ExprAST {
@@ -17,6 +20,9 @@ public:
     virtual llvm::Value * codegen() = 0;
 };
 
+/**
+ * contains single numeric value
+ */
 class NumberExprAST : public ExprAST {
     double Val;
 
@@ -25,6 +31,9 @@ public:
     llvm::Value * codegen() override;
 };
 
+/**
+ * contains reference to a Variable
+ */
 class VariableExprAST : public ExprAST {
     std::string Name;
 
@@ -33,6 +42,9 @@ public:
     llvm::Value * codegen() override;
 };
 
+/**
+ * contains Binary operations (can hold other expressions!)
+ */
 class BinaryExprAST : public ExprAST {
     char Op;
     std::unique_ptr<ExprAST> LHS, RHS;
@@ -42,6 +54,9 @@ public:
     llvm::Value * codegen() override;
 };
 
+/**
+ * contains if else statement (can hold other expressions!)
+ */
 class IfExprAST : public ExprAST {
     std::unique_ptr<ExprAST> Cond, Then, Else;
 
@@ -51,6 +66,9 @@ public:
     llvm::Value * codegen() override;
 };
 
+/**
+ * contains for loop (holds other expressions!)
+ */
 class ForExprAST : public ExprAST {
     std::string VarName;
     std::unique_ptr<ExprAST> Start, End, Step, Body;
@@ -61,6 +79,9 @@ public:
     llvm::Value * codegen() override;
 };
 
+/**
+ * contains function Callee
+ */
 class CallExprAST : public ExprAST {
     std::string Callee;
     std::vector<std::unique_ptr<ExprAST>> Args;
@@ -70,6 +91,9 @@ public:
     llvm::Value * codegen() override;
 };
 
+/**
+ * contains function head
+ */
 class PrototypeAST {
     std::string Name;
     std::vector<std::string> Args;
@@ -82,6 +106,9 @@ public:
     llvm::Function * codegen();
 };
 
+/**
+ * combines function body and head
+ */
 class FunctionAST {
     std::unique_ptr<PrototypeAST> Proto;
     std::unique_ptr<ExprAST> Body;
