@@ -1,11 +1,12 @@
-## Kaleidoscope
+# Kaleidoscope
 This is my implementation of the Kaleidoscope language from the llvm tutorials
 
 The major version will respond to the llvm tutorial chapter
 
 ## Install
-The only runtime dependency is the llvm base (v17)
-Premake is used as a buildsystem
+The only runtime dependency is the [llvm](https://llvm.org/docs/GettingStarted.html) base (v17)
+
+[Premake](https://premake.github.io/) is used as a buildsystem
 
 ## Usage
 run the created binary in a terminal... **boom!** Kaleidoscope interpreter
