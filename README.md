@@ -7,16 +7,16 @@ The major version will respond to the llvm tutorial chapter
 The only runtime dependency is the [llvm](https://llvm.org/docs/GettingStarted.html) base (>=v17)
 
 cmake build instructions:
-´´´
+```
 cmake -S . -B build && cmake --build build && cmake --install --prefix .
-´´´
+```
 
 ## Usage
 run the created binary in a terminal... **boom!** Kaleidoscope interpreter
 
-´´´
+```
 bin/Kaleidoscope
-´´´
+```
 
 currently supported:
 - basic math operations (+, -, *, <)
