@@ -1,6 +1,4 @@
 /build
 *.kate*
 toy.cpp
-/obj
-*.make
-Makefile
+/bin
