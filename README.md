@@ -6,7 +6,7 @@ The major version will respond to the llvm tutorial chapter
 ## Install
 The only runtime dependency is the [llvm](https://llvm.org/docs/GettingStarted.html) base (v17)
 
-[Premake](https://premake.github.io/) is used as a buildsystem
+buildsystem to be determined
 
 ## Usage
 run the created binary in a terminal... **boom!** Kaleidoscope interpreter
