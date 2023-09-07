@@ -8,7 +8,7 @@ The only runtime dependency is the [llvm](https://llvm.org/docs/GettingStarted.h
 
 cmake build instructions:
 ```
-cmake -S . -B build && cmake --build build && cmake --install --prefix .
+cmake -S . -B build && cmake --build build && cmake --install build --prefix .
 ```
 
 ## Usage
