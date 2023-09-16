@@ -215,11 +215,36 @@ std::unique_ptr<AST::ExprAST> Parser::ParseExpression() {
 }
 
 std::unique_ptr<AST::PrototypeAST> Parser::ParsePrototype() {
-    if (Lexer::CurTok != tok_identifier)
-        return Log::LogError<std::unique_ptr<AST::PrototypeAST>>("Exprected function name in prototype");
+    std::string FnName;
 
-    std::string FnName = Lexer::IdentifierStr;
-    Lexer::getNextToken(); // eat identifier
+    unsigned Kind = 0;
+    unsigned BinaryPrecedence = 30;
+
+    switch (Lexer::CurTok) {
+        default:
+            return Log::LogError<std::unique_ptr<AST::PrototypeAST>>("Expected function name in prototype");
+        case tok_identifier:
+            FnName = Lexer::IdentifierStr;
+            Kind = 0;
+            Lexer::getNextToken();
+            break;
+        case tok_binary:
+            Lexer::getNextToken();
+            if (!isascii(Lexer::CurTok))
+                return Log::LogError<std::unique_ptr<AST::PrototypeAST>>("Expected binary operator");
+            FnName = "binary";
+            FnName += (char)Lexer::CurTok;
+            Kind = 2;
+            Lexer::getNextToken();
+
+            if (Lexer::CurTok == tok_number) {
+                if (Lexer::NumVal < 1 || Lexer::NumVal > 100)
+                    return Log::LogError<std::unique_ptr<AST::PrototypeAST>>("Invalid precedence: must be 1..100");
+                BinaryPrecedence = (unsigned)Lexer::NumVal;
+                Lexer::getNextToken();
+            }
+            break;
+    }
 
     if (Lexer::CurTok != '(')
         return Log::LogError<std::unique_ptr<AST::PrototypeAST>>("Expected '(' in prototype");
@@ -232,6 +257,9 @@ std::unique_ptr<AST::PrototypeAST> Parser::ParsePrototype() {
         return Log::LogError<std::unique_ptr<AST::PrototypeAST>>("Expected ')' in prototype");
 
     Lexer::getNextToken(); // eat ')'
+
+    if (Kind && ArgNames.size() != Kind)
+        return Log::LogError<std::unique_ptr<AST::PrototypeAST>>("Invalid number of operands for operator");
 
     return std::make_unique<AST::PrototypeAST>(FnName, std::move(ArgNames));
 }
