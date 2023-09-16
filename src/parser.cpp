@@ -223,25 +223,29 @@ std::unique_ptr<AST::PrototypeAST> Parser::ParsePrototype() {
     switch (Lexer::CurTok) {
         default:
             return Log::LogError<std::unique_ptr<AST::PrototypeAST>>("Expected function name in prototype");
+
+            // normal Function
         case tok_identifier:
             FnName = Lexer::IdentifierStr;
             Kind = 0;
-            Lexer::getNextToken();
+            Lexer::getNextToken(); // eat IdentifierStr
             break;
+
+            // binary operator
         case tok_binary:
-            Lexer::getNextToken();
+            Lexer::getNextToken(); // eat 'binary'
             if (!isascii(Lexer::CurTok))
                 return Log::LogError<std::unique_ptr<AST::PrototypeAST>>("Expected binary operator");
             FnName = "binary";
             FnName += (char)Lexer::CurTok;
             Kind = 2;
-            Lexer::getNextToken();
+            Lexer::getNextToken(); // eat operator
 
             if (Lexer::CurTok == tok_number) {
                 if (Lexer::NumVal < 1 || Lexer::NumVal > 100)
                     return Log::LogError<std::unique_ptr<AST::PrototypeAST>>("Invalid precedence: must be 1..100");
                 BinaryPrecedence = (unsigned)Lexer::NumVal;
-                Lexer::getNextToken();
+                Lexer::getNextToken(); // eat precedence
             }
             break;
     }
