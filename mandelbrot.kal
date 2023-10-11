@@ -1,3 +1,6 @@
+# this is the example to calculate & display the mandelbrot set
+# use it by piping it into Kaleidoscope
+
 # Logical unary not.
 def unary!(v)
   if v then
