@@ -8,6 +8,7 @@
 
 #include "log.h"
 #include "ir.h"
+#include "parser.h"
 
 namespace AST {
 llvm::Value * NumberExprAST::codegen() {
@@ -40,8 +41,26 @@ llvm::Value * BinaryExprAST::codegen() {
             return IR::Builder->CreateUIToFP(L, llvm::Type::getDoubleTy(*IR::Context), "booltmp");
 
         default:
-            return Log::LogError<llvm::Value*>("invalid binary operator");
+            break;
     }
+
+    llvm::Function * F = IR::getFunction(std::string("binary") + Op);
+    assert(F && "binary operator not found!");
+
+    llvm::Value * Ops[2] = { L, R };
+    return IR::Builder->CreateCall(F, Ops, "binop");
+}
+
+llvm::Value * UnaryExprAST::codegen() {
+    llvm::Value * OperandV = Operand->codegen();
+    if (!OperandV)
+        return nullptr;
+
+    llvm::Function * F = IR::getFunction(std::string("unary") + Opcode);
+    if (!F)
+        return Log::LogError<llvm::Value*>("Unknown unary Operator");
+
+    return IR::Builder->CreateCall(F, OperandV, "unop");
 }
 
 llvm::Value * IfExprAST::codegen() {
@@ -195,7 +214,10 @@ llvm::Function * FunctionAST::codegen() {
     if (!TheFunction->empty())
         return (llvm::Function * ) Log::LogError<llvm::Value*>("Function cannot be redefined.");
 
-    // create root block for cuntion
+    if (P.isBinaryOp())
+        Parser::BinopPrecedence[P.getOperatorName()] = P.getBinaryPrecedence();
+
+    // create root block for junction
     llvm::BasicBlock * BB = llvm::BasicBlock::Create(*IR::Context, "entry", TheFunction);
     IR::Builder->SetInsertPoint(BB);
 

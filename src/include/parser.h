@@ -18,6 +18,7 @@ namespace Parser {
      std::unique_ptr<AST::ExprAST> ParsePrimary();
      /**recursivly evaluetes complex expressions into ordered parts*/
      std::unique_ptr<AST::ExprAST> ParseBinOpRHS(int ExprPrec, std::unique_ptr<AST::ExprAST> LHS);
+     std::unique_ptr<AST::ExprAST> ParseUnary();
      std::unique_ptr<AST::ExprAST> ParseIfExpr();
      std::unique_ptr<AST::ExprAST> ParseForExpr();
 

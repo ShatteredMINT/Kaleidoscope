@@ -17,6 +17,7 @@ file(GLOB_RECURSE SRC *.cpp)
 add_executable(${PROJECT_NAME} ${SRC})
 
 target_include_directories(${PROJECT_NAME} PUBLIC include include/ven)
+set_property(TARGET ${PROJECT_NAME} PROPERTY ENABLE_EXPORTS ON)
 
 
 # Find the libraries that correspond to the LLVM components

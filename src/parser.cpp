@@ -119,7 +119,7 @@ std::unique_ptr<AST::ExprAST> Parser::ParseBinOpRHS(int ExprPrec, std::unique_pt
         int BinOp = Lexer::CurTok;
         Lexer::getNextToken(); // eat binop
 
-        auto RHS = ParsePrimary();
+        auto RHS = ParseUnary();
         if (!RHS)
             return nullptr;
 
@@ -134,6 +134,20 @@ std::unique_ptr<AST::ExprAST> Parser::ParseBinOpRHS(int ExprPrec, std::unique_pt
         // add node to tree
         LHS = std::make_unique<AST::BinaryExprAST>(BinOp, std::move(LHS), std::move(RHS));
     }
+}
+
+std::unique_ptr<AST::ExprAST> Parser::ParseUnary() {
+    //check if it is not an operator
+    if (!isascii(Lexer::CurTok) || Lexer::CurTok == '(' || Lexer::CurTok == '.')
+        return ParsePrimary();
+
+    // proceed with unary parsing
+
+    char Opc = Lexer::CurTok;
+    Lexer::getNextToken();
+    if (auto Operand = ParseUnary())
+        return std::make_unique<AST::UnaryExprAST>(Opc, std::move(Operand));
+    return nullptr;
 }
 
 std::unique_ptr<AST::ExprAST> Parser::ParseIfExpr() {
@@ -208,7 +222,7 @@ std::unique_ptr<AST::ExprAST> Parser::ParseForExpr() {
 }
 
 std::unique_ptr<AST::ExprAST> Parser::ParseExpression() {
-    auto LHS = ParsePrimary();
+    auto LHS = ParseUnary();
     if (!LHS) return nullptr;
 
     return ParseBinOpRHS(0, std::move(LHS));
@@ -229,6 +243,17 @@ std::unique_ptr<AST::PrototypeAST> Parser::ParsePrototype() {
             FnName = Lexer::IdentifierStr;
             Kind = 0;
             Lexer::getNextToken(); // eat IdentifierStr
+            break;
+
+        case tok_unary:
+            Lexer::getNextToken();
+            if (!isascii(Lexer::CurTok))
+                return Log::LogError<std::unique_ptr<AST::PrototypeAST>>("Expected unary operator!");
+
+            FnName = "unary";
+            FnName += (char)Lexer::CurTok;
+            Kind = 1;
+            Lexer::getNextToken();
             break;
 
             // binary operator
@@ -265,7 +290,7 @@ std::unique_ptr<AST::PrototypeAST> Parser::ParsePrototype() {
     if (Kind && ArgNames.size() != Kind)
         return Log::LogError<std::unique_ptr<AST::PrototypeAST>>("Invalid number of operands for operator");
 
-    return std::make_unique<AST::PrototypeAST>(FnName, std::move(ArgNames));
+    return std::make_unique<AST::PrototypeAST>(FnName, std::move(ArgNames), Kind != 0, BinaryPrecedence);
 }
 
 std::unique_ptr<AST::FunctionAST> Parser::ParseDefinition() {
