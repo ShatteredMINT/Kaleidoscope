@@ -27,5 +27,8 @@ currently supported:
 - extra functions 'putchard(x)' and 'printd(x)' for console output
 - if with 'if COND then CODE1 else CODE2'
 - for with 'for x = 1, x < 3[, 1.0] in CODE'
+- custom unary and binary operators defined by naming a function "unary/binary + [operator]" (Ex: "unary!")
+  - binary operators also need a precedence defined after the name (Ex: "binary| 10")
+  - Full example gor a greater than operator 'def binary> 10 (a b) b<a;'
 
 **there is no sandbox or any other security mechanism**... this is technically exploitable... tho i don't see anybody using this for mission critical things
