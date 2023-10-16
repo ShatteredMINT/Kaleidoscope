@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <cstdio>
 
 enum Token {
     tok_eof = -1,
@@ -32,6 +33,9 @@ namespace Lexer {
     extern double NumVal;
     /**current token*/
     extern int CurTok;
+
+    /** stream from which to read input **/
+    extern FILE * stream;
 
     /**helper to grab current token and store it*/
     int getNextToken();
