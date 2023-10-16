@@ -94,24 +94,31 @@ static void HandleTopLevelExpression() {
     }
 }
 
-static void MainLoop() {
-    while (true) {
-        switch (Lexer::CurTok) {
-            case tok_eof:
-                return;
-            case ';':
-                Lexer::getNextToken(); // ignore top level smicolons
-                continue;
-            case tok_def:
-                HandleDefinition();
-                break;
-            case tok_extern:
-                HandleExtern();
-                break;
-            default:
-                HandleTopLevelExpression();
-                break;
-        }
+static int TopCompare() {
+    switch (Lexer::CurTok) {
+        case tok_eof:
+            return 1;
+        case ';':
+            Lexer::getNextToken(); // ignore top level smicolons
+            return 0;
+        case tok_def:
+            HandleDefinition();
+            break;
+        case tok_extern:
+            HandleExtern();
+            break;
+        default:
+            HandleTopLevelExpression();
+            break;
+
+        return 0;
+    }
+}
+
+static void UserLoop() {
+    fprintf(stderr, "ready> ");
+    Lexer::getNextToken();
+    while (TopCompare() == 0) {
         fprintf(stderr, "ready> ");
     }
 }
@@ -135,7 +142,7 @@ void fromFile(char * filename) {
     }
 
     Lexer::getNextToken();
-    MainLoop();
+    while(TopCompare() == 0);
 
     Lexer::stream = stdin;
     fclose(stream);
@@ -195,12 +202,9 @@ int main(int argc, char ** argv) {
 
     parseArgs(argc, argv);
 
-    // initialize user interface
-    fprintf(stderr, "ready> ");
-    Lexer::getNextToken();
 
     // continue evalueting expressions till eof (Ctrl+D)
-    MainLoop();
+    UserLoop();
 
     return 0;
 }
