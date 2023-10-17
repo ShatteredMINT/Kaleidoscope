@@ -7,18 +7,19 @@
 std::string Lexer::IdentifierStr;
 double Lexer::NumVal;
 int Lexer::CurTok;
+FILE * Lexer::stream = stdin;
 
 
 int Lexer::gettok() {
     static int LastChar = ' ';
 
     while (isspace(LastChar))
-        LastChar = getchar();
+        LastChar = getc(stream);
 
     if (isalpha(LastChar)) {
         IdentifierStr = LastChar;
 
-        while (isalnum(LastChar = getchar()))
+        while (isalnum(LastChar = getc(stream)))
             IdentifierStr += LastChar;
 
         if (IdentifierStr == "def")
@@ -47,7 +48,7 @@ int Lexer::gettok() {
         std:: string NumStr;
         do {
             NumStr += LastChar;
-            LastChar = getchar();
+            LastChar = getc(stream);
         } while (isdigit(LastChar) || LastChar == '.');
 
         NumVal = strtod(NumStr.c_str(), 0);
@@ -57,18 +58,20 @@ int Lexer::gettok() {
     // handle comments
     if (LastChar == '#') {
         do
-            LastChar = getchar();
+            LastChar = getc(stream);
         while (LastChar != EOF && LastChar != '\n' && LastChar != '\r');
 
         if (LastChar != EOF)
             return gettok();
     }
 
-    if (LastChar == EOF)
+    if (LastChar == EOF) {
+        LastChar = ' ';
         return tok_eof;
+    }
 
     int ThisChar = LastChar;
-    LastChar = getchar();
+    LastChar = getc(stream);
     return ThisChar;
 }
 

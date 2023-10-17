@@ -94,44 +94,117 @@ static void HandleTopLevelExpression() {
     }
 }
 
-static void MainLoop() {
-    while (true) {
-        switch (Lexer::CurTok) {
-            case tok_eof:
-                return;
-            case ';':
-                Lexer::getNextToken(); // ignore top level smicolons
-                continue;
-            case tok_def:
-                HandleDefinition();
-                break;
-            case tok_extern:
-                HandleExtern();
-                break;
-            default:
-                HandleTopLevelExpression();
-                break;
-        }
+static int TopCompare() {
+    switch (Lexer::CurTok) {
+        case tok_eof:
+            return 1;
+        case ';':
+            Lexer::getNextToken(); // ignore top level smicolons
+            return 0;
+        case tok_def:
+            HandleDefinition();
+            break;
+        case tok_extern:
+            HandleExtern();
+            break;
+        default:
+            HandleTopLevelExpression();
+            break;
+
+        return 0;
+    }
+}
+
+static void UserLoop() {
+    fprintf(stderr, "ready> ");
+    Lexer::getNextToken();
+    while (TopCompare() == 0) {
         fprintf(stderr, "ready> ");
     }
 }
 
-int main() {
+void printHelp() {
+    printf("A simple kaleidoscope interpreter\n\n");
+    printf("-i\t--include-file\t\tspecify a file with kaleidoscope code to include / execute before starting the console\n");
+    printf("--help\tprint this help\n");
+    printf("\n");
+    printf("Author: ShatteredMINT\n\n");
+    exit(0);
+}
+
+void fromFile(char * filename) {
+    FILE * stream = fopen(filename, "r");
+
+    if (stream)
+        Lexer::stream = stream;
+    else {
+        fprintf(stderr, "ERROR: couldn't read file: %s\n defaulting to stdin", filename);
+    }
+
+    Lexer::getNextToken();
+    while(TopCompare() == 0);
+
+    Lexer::stream = stdin;
+    fclose(stream);
+}
+
+void parseArgs(int argc, char ** argv) {
+
+    for (int i = 1; i < argc; i++) {
+        if (argv[i][0] == '-') {
+            switch (argv[i][1]) {
+                case '-':
+                    switch (argv[i][2]) {
+                        case '\0':
+                            return;
+                        case 'h':
+                            if (strcmp(argv[i], "--help") == 0)
+                                printHelp();
+                            break;
+                        case 'i':
+                            if (strcmp(argv[i], "--include-file") == 0)
+                                fromFile(argv[++i]);
+                            break;
+                        default:
+                            fprintf(stderr, "ERROR: invalid option: %s", argv[i]);
+                            exit(0);
+                    };
+                    break;
+
+                case '?':
+                    printHelp();
+                    break;
+
+                case 'i':
+                    fromFile(argv[++i]);
+                    break;
+
+                default:
+                    fprintf(stderr, "ERROR: invalid option: %s", argv[i]);
+                    exit(0);
+            }
+        } else {
+            fprintf(stderr, "ERROR: invalid option: %s", argv[i]);
+            exit;
+        }
+    }
+}
+
+int main(int argc, char ** argv) {
     // setup JIT backend to run on host
     llvm::InitializeNativeTarget();
     llvm::InitializeNativeTargetAsmPrinter();
     llvm::InitializeNativeTargetAsmParser();
 
-    // initialize user interface
-    fprintf(stderr, "ready> ");
-    Lexer::getNextToken();
-
     // create JIT and create module for future code
     JIT::TheJIT = JIT::ExitOnErr(llvm::orc::KaleidoscopeJIT::Create());
     IR::InitializeModuleAndPassManager();
 
+    parseArgs(argc, argv);
+
+
     // continue evalueting expressions till eof (Ctrl+D)
-    MainLoop();
+    UserLoop();
 
     return 0;
 }
