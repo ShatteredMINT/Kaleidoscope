@@ -14,13 +14,13 @@
 
 /// putchard - putchar that takes a double and returns 0.
 extern "C" DLLEXPORT double putchard(double X) {
-  fputc((char)X, stderr);
+  fputc((char)X, stdout);
   return 0;
 }
 
 /// printd - printf that takes a double prints it as "%f\n", returning 0.
 extern "C" DLLEXPORT double printd(double X) {
-  fprintf(stderr, "%f\n", X);
+  fprintf(stdout, "%f\n", X);
   return 0;
 }
 
@@ -33,9 +33,9 @@ static void HandleDefinition() {
         if (auto * FnIR = FnAST->codegen()) {
 
             //output llvm IR
-            fprintf(stderr, "Read function definition:\n");
-            FnIR->print(llvm::errs());
-            fprintf(stderr, "\n");
+            fprintf(stdout, "Read function definition:\n");
+            FnIR->print(llvm::outs());
+            fprintf(stdout, "\n");
 
             // put function into seperate module and create new module for future code
             JIT::ExitOnErr(JIT::TheJIT->addModule(llvm::orc::ThreadSafeModule(std::move(IR::Module), std::move(IR::Context))));
@@ -51,9 +51,9 @@ static void HandleExtern() {
         if (auto * FnIR = ProtoAST->codegen()) {
 
             // output llvm IR
-            fprintf(stderr, "Read extern:\n");
-            FnIR->print(llvm::errs());
-            fprintf(stderr, "\n");
+            fprintf(stdout, "Read extern:\n");
+            FnIR->print(llvm::outs());
+            fprintf(stdout, "\n");
 
             // add function to list of callable functions
             IR::FunctionProtos[ProtoAST->getName()] = std::move(ProtoAST);
@@ -68,9 +68,9 @@ static void HandleTopLevelExpression() {
         if (auto * FnIR = FnAST->codegen()) {
 
             //output llvm IR
-            fprintf(stderr, "Read top-level expression:\n");
-            FnIR->print(llvm::errs());
-            fprintf(stderr, "\n");
+            fprintf(stdout, "Read top-level expression:\n");
+            FnIR->print(llvm::outs());
+            fprintf(stdout, "\n");
 
             // ressource allocation and gc
             auto RT = JIT::TheJIT->getMainJITDylib().createResourceTracker();
@@ -83,7 +83,7 @@ static void HandleTopLevelExpression() {
             //execute expression
             auto ExprSymbol = JIT::ExitOnErr(JIT::TheJIT->lookup("__anon_expr"));
             double (*FP) () = ExprSymbol.getAddress().toPtr<double (*) ()>();
-            fprintf(stderr, "Evaluated to %f\n\n", FP());
+            fprintf(stdout, "Evaluated to %f\n\n", FP());
 
             // cleanup
             JIT::ExitOnErr(RT->remove());
@@ -116,10 +116,10 @@ static int TopCompare() {
 }
 
 static void UserLoop() {
-    fprintf(stderr, "ready> ");
+    fprintf(stdout, "ready> ");
     Lexer::getNextToken();
     while (TopCompare() == 0) {
-        fprintf(stderr, "ready> ");
+        fprintf(stdout, "ready> ");
     }
 }
 
@@ -138,7 +138,7 @@ void fromFile(char * filename) {
     if (stream)
         Lexer::stream = stream;
     else {
-        fprintf(stderr, "ERROR: couldn't read file: %s\n defaulting to stdin", filename);
+        fprintf(stdout, "ERROR: couldn't read file: %s\n defaulting to stdin", filename);
     }
 
     Lexer::getNextToken();
@@ -166,7 +166,7 @@ void parseArgs(int argc, char ** argv) {
                                 fromFile(argv[++i]);
                             break;
                         default:
-                            fprintf(stderr, "ERROR: invalid option: %s", argv[i]);
+                            fprintf(stdout, "ERROR: invalid option: %s", argv[i]);
                             exit(0);
                     };
                     break;
@@ -180,11 +180,11 @@ void parseArgs(int argc, char ** argv) {
                     break;
 
                 default:
-                    fprintf(stderr, "ERROR: invalid option: %s", argv[i]);
+                    fprintf(stdout, "ERROR: invalid option: %s", argv[i]);
                     exit(0);
             }
         } else {
-            fprintf(stderr, "ERROR: invalid option: %s", argv[i]);
+            fprintf(stdout, "ERROR: invalid option: %s", argv[i]);
             exit;
         }
     }
