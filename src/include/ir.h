@@ -2,6 +2,7 @@
 
 #include<map>
 #include<memory>
+#include <string>
 
 #include "llvm/IR/IRBuilder.h"
 
@@ -31,7 +32,7 @@ namespace IR{
 
     // TODO should probably be moved into namespace AST
     /**list of existing variables*/
-    extern std::map<std::string, llvm::Value *> NamedValues;
+    extern std::map<std::string, llvm::AllocaInst *> NamedValues;
     // TODO should probably be moved into namespace AST
     /** list of already declared functions*/
     extern std::map<std::string, std::unique_ptr<AST::PrototypeAST>> FunctionProtos;
@@ -41,6 +42,9 @@ namespace IR{
 
     /**setup llvm toolchain to be ready for code creation and execution*/
     void InitializeModuleAndPassManager();
+
+    /**helper funtion to creeate alloca instructions at the beginning of a Kaleidoscope function**/
+    llvm::AllocaInst * CreateEntryBlockAlloca(llvm::Function * TheFunction, std::string & VarName);
 
     // TODO should probably be moved into namespace AST
     /**returns the most recent funtion fitting the name*/

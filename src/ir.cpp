@@ -15,7 +15,7 @@
 std::unique_ptr<llvm::LLVMContext> IR::Context;
 std::unique_ptr<llvm::IRBuilder<>> IR::Builder;
 std::unique_ptr<llvm::Module> IR::Module;
-std::map<std::string, llvm::Value *> IR::NamedValues;
+std::map<std::string, llvm::AllocaInst *> IR::NamedValues;
 std::map<std::string, std::unique_ptr<AST::PrototypeAST>> IR::FunctionProtos;
 
 std::unique_ptr<llvm::legacy::FunctionPassManager> IR::FPM;
@@ -38,6 +38,11 @@ void IR::InitializeModuleAndPassManager() {
     FPM->add(llvm::createCFGSimplificationPass());
 
     FPM->doInitialization();
+} 
+
+llvm::AllocaInst * IR::CreateEntryBlockAlloca(llvm::Function *TheFunction, std::string &VarName) {
+  llvm::IRBuilder<> TmpB(&TheFunction->getEntryBlock(), TheFunction->getEntryBlock().begin());
+  return TmpB.CreateAlloca(llvm::Type::getDoubleTy(* Context), nullptr, VarName);
 }
 
 llvm::Function* IR::getFunction(std::string Name) {
