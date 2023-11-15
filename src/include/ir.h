@@ -44,7 +44,7 @@ namespace IR{
     void InitializeModuleAndPassManager();
 
     /**helper funtion to creeate alloca instructions at the beginning of a Kaleidoscope function**/
-    llvm::AllocaInst * CreateEntryBlockAlloca(llvm::Function * TheFunction, std::string & VarName);
+    llvm::AllocaInst * CreateEntryBlockAlloca(llvm::Function * TheFunction, llvm::StringRef VarName);
 
     // TODO should probably be moved into namespace AST
     /**returns the most recent funtion fitting the name*/
