@@ -40,7 +40,7 @@ void IR::InitializeModuleAndPassManager() {
     FPM->doInitialization();
 } 
 
-llvm::AllocaInst * IR::CreateEntryBlockAlloca(llvm::Function *TheFunction, std::string &VarName) {
+llvm::AllocaInst * IR::CreateEntryBlockAlloca(llvm::Function *TheFunction, llvm::StringRef VarName) {
   llvm::IRBuilder<> TmpB(&TheFunction->getEntryBlock(), TheFunction->getEntryBlock().begin());
   return TmpB.CreateAlloca(llvm::Type::getDoubleTy(* Context), nullptr, VarName);
 }
