@@ -1,4 +1,4 @@
-#include "ir.h"
+#include "include/ir.h"
 
 #include <memory>
 
@@ -8,8 +8,8 @@
 #include "llvm/Transforms/Scalar.h"
 #include "llvm/Transforms/Scalar/GVN.h"
 
-#include "jit.h"
-#include "ast.h"
+#include "include/jit.h"
+#include "include/ast.h"
 
 // "initialize" values
 std::unique_ptr<llvm::LLVMContext> IR::Context;

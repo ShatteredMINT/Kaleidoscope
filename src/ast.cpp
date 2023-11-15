@@ -1,4 +1,4 @@
-#include "ast.h"
+#include "include/ast.h"
 
 #include <vector>
 #include <string>
@@ -6,9 +6,9 @@
 #include "llvm/IR/Verifier.h"
 #include "llvm/IR/LegacyPassManager.h"
 
-#include "log.h"
-#include "ir.h"
-#include "parser.h"
+#include "include/log.h"
+#include "include/ir.h"
+#include "include/parser.h"
 
 namespace AST {
 llvm::Value * NumberExprAST::codegen() {
