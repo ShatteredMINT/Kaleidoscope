@@ -1,11 +1,11 @@
-#include "parser.h"
+#include "include/parser.h"
 
 #include <map>
 #include <memory>
 
-#include "ast.h"
-#include "lexer.h"
-#include "log.h"
+#include "include/ast.h"
+#include "include/lexer.h"
+#include "include/log.h"
 
 std::map<char, int> Parser::BinopPrecedence = {
     {'<', 10},
