@@ -25,6 +25,24 @@ llvm::Value *VariableExprAST::codegen() {
 }
 
 llvm::Value *BinaryExprAST::codegen() {
+  // Special case '=' because LHS is not an expression
+  if (Op == '=') {
+    VariableExprAST *LHSE = static_cast<VariableExprAST *>(LHS.get());
+    if (!LHSE)
+      return Log::LogError<llvm::Value *>(
+          "Destination of '=' must be a variable");
+    llvm::Value *Val = RHS->codegen();
+    if (!Val)
+      return nullptr;
+
+    llvm::Value *Variable = IR::NamedValues[LHSE->getName()];
+    if (!Variable)
+      return Log::LogError<llvm::Value *>("Unknown variable name");
+
+    IR::Builder->CreateStore(Val, Variable);
+    return Val;
+  }
+
   llvm::Value *L = LHS->codegen();
   llvm::Value *R = RHS->codegen();
   if (!L || !R)
@@ -137,7 +155,6 @@ llvm::Value *ForExprAST::codegen() {
   // LOOP
   IR::Builder->SetInsertPoint(LoopBB);
 
-
   llvm::AllocaInst *OldVal = IR::NamedValues[VarName];
   IR::NamedValues[VarName] = Alloca;
 
@@ -159,8 +176,9 @@ llvm::Value *ForExprAST::codegen() {
   if (!EndCond)
     return nullptr;
 
-  llvm::Value * CurVar = IR::Builder->CreateLoad(Alloca->getAllocatedType(), Alloca, VarName.c_str());
-  llvm::Value * NextVar = IR::Builder->CreateFAdd(CurVar, StepVal, "nextvar");
+  llvm::Value *CurVar = IR::Builder->CreateLoad(Alloca->getAllocatedType(),
+                                                Alloca, VarName.c_str());
+  llvm::Value *NextVar = IR::Builder->CreateFAdd(CurVar, StepVal, "nextvar");
   IR::Builder->CreateStore(NextVar, Alloca);
 
   EndCond = IR::Builder->CreateFCmpONE(
@@ -246,7 +264,8 @@ llvm::Function *FunctionAST::codegen() {
   // make local variables and add args to it
   IR::NamedValues.clear();
   for (auto &Arg : TheFunction->args()) {
-    llvm::AllocaInst * Alloca = IR::CreateEntryBlockAlloca(TheFunction, Arg.getName());
+    llvm::AllocaInst *Alloca =
+        IR::CreateEntryBlockAlloca(TheFunction, Arg.getName());
     IR::Builder->CreateStore(&Arg, Alloca);
     IR::NamedValues[std::string(Arg.getName())] = Alloca;
   }
