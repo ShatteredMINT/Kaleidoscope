@@ -24,6 +24,11 @@ llvm::Value *VariableExprAST::codegen() {
   return IR::Builder->CreateLoad(A->getAllocatedType(), A, Name.c_str());
 }
 
+llvm::Value * VarExprAST::codegen() {
+  // TODO stub implementation
+  return nullptr;
+}
+
 llvm::Value *BinaryExprAST::codegen() {
   // Special case '=' because LHS is not an expression
   if (Op == '=') {
