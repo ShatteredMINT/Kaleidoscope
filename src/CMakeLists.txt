@@ -25,4 +25,4 @@ set_property(TARGET ${PROJECT_NAME} PROPERTY ENABLE_EXPORTS ON)
 llvm_map_components_to_libnames(llvm_libs core orcjit native)
 
 # Link against LLVM libraries
-target_link_libraries(${PROJECT_NAME} ${llvm_libs})
+target_link_libraries(${PROJECT_NAME} LLVM)
