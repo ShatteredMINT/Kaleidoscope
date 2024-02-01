@@ -2,3 +2,4 @@
 *.kate*
 toy.cpp
 /bin
+.cache
