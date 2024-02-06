@@ -33,6 +33,8 @@ std::unique_ptr<AST::FunctionAST> ParseDefinition();
 std::unique_ptr<AST::PrototypeAST> ParseExtern();
 std::unique_ptr<AST::FunctionAST> ParseTopLevelExpr();
 
+std::unique_ptr<AST::ExprAST> ParseVarExpr();
+
 /**get precedence of current binary operrator*/
 int GetTokPrecedence();
 }; // namespace Parser

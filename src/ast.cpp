@@ -3,7 +3,12 @@
 #include <string>
 #include <vector>
 
+#include "llvm/ADT/APFloat.h"
+#include "llvm/IR/Constants.h"
+#include "llvm/IR/Function.h"
+#include "llvm/IR/Instructions.h"
 #include "llvm/IR/LegacyPassManager.h"
+#include "llvm/IR/Value.h"
 #include "llvm/IR/Verifier.h"
 
 #include "include/ir.h"
@@ -25,8 +30,41 @@ llvm::Value *VariableExprAST::codegen() {
 }
 
 llvm::Value * VarExprAST::codegen() {
-  // TODO stub implementation
-  return nullptr;
+  std::vector<llvm::AllocaInst *> OldBindings;
+
+  llvm::Function * TheFunction = IR::Builder->GetInsertBlock()->getParent();
+
+  // Register all variables and emit their initializer
+  for (unsigned i = 0, e = VarNames.size(); i != e; ++i) {
+    const std::string &VarName = VarNames[i].first;
+    ExprAST *Init = VarNames[i].second.get();
+    
+    llvm::Value * InitVal;
+    if (Init) {
+      InitVal = Init->codegen();
+
+      if (!InitVal)
+        return nullptr;
+    } else {
+       InitVal = llvm::ConstantFP::get(*IR::Context, llvm::APFloat(0.0));
+    }
+
+    llvm::AllocaInst * Alloca = IR::CreateEntryBlockAlloca(TheFunction, VarName);
+    IR::Builder->CreateStore(InitVal, Alloca);
+
+    OldBindings.push_back(IR::NamedValues[VarName]);
+
+    IR::NamedValues[VarName] = Alloca;
+  }
+
+  llvm::Value * BodyVal = Body->codegen();
+  if (!BodyVal)
+    return nullptr;
+
+  for (unsigned i = 0, e = VarNames.size(); i != e; ++i)
+    IR::NamedValues[VarNames[i].first] = OldBindings[i];
+
+  return BodyVal;
 }
 
 llvm::Value *BinaryExprAST::codegen() {

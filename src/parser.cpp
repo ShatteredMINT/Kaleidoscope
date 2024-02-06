@@ -2,6 +2,9 @@
 
 #include <map>
 #include <memory>
+#include <string>
+#include <utility>
+#include <vector>
 
 #include "include/ast.h"
 #include "include/lexer.h"
@@ -92,6 +95,8 @@ std::unique_ptr<AST::ExprAST> Parser::ParsePrimary() {
     return ParseIfExpr();
   case tok_for:
     return ParseForExpr();
+  case tok_var:
+    return ParseVarExpr();
   }
 }
 
@@ -233,6 +238,51 @@ std::unique_ptr<AST::ExprAST> Parser::ParseForExpr() {
   return std::make_unique<AST::ForExprAST>(IdName, std::move(Start),
                                            std::move(End), std::move(Step),
                                            std::move(Body));
+}
+
+std::unique_ptr<AST::ExprAST> Parser::ParseVarExpr() {
+  Lexer::getNextToken();
+
+  std::vector<std::pair<std::string, std::unique_ptr<AST::ExprAST>>> VarNames;
+
+  if (Lexer::CurTok != tok_identifier) 
+    return Log::LogError<std::unique_ptr<AST::ExprAST>>("expected identifier after var!");
+  
+  int i = 0;
+  for (; i < 2000000; i++) {
+    std::string Name = Lexer::IdentifierStr;
+    Lexer::getNextToken();
+
+    std::unique_ptr<AST::ExprAST> Init;
+    if (Lexer::CurTok == '=') {
+      Lexer::getNextToken(); // eat =
+
+      Init = ParseExpression();
+      if (!Init)
+        return Log::LogError<std::unique_ptr<AST::ExprAST>>("No value to assign after '='");
+    }
+
+    VarNames.push_back(std::make_pair(Name, std::move(Init)));
+
+    if (Lexer::CurTok != ',') break;
+    Lexer::getNextToken(); // eat the ';'
+    
+    if (Lexer::CurTok != tok_identifier)
+      return Log::LogError<std::unique_ptr<AST::ExprAST>>("expected identifier after \"var\"");
+  }
+
+  if (i >= 2000000)
+    return Log::LogError<std::unique_ptr<AST::ExprAST>>("You can not initialize more than 2 million variables in one line");
+
+  if (Lexer::CurTok != tok_in)
+    return Log::LogError<std::unique_ptr<AST::ExprAST>>("expected 'in' keyword after 'var'");
+  Lexer::getNextToken();
+
+  auto Body = ParseExpression();
+  if (!Body)
+    return Log::LogError<std::unique_ptr<AST::ExprAST>>("No body in which variables should be defined");
+
+  return std::make_unique<AST::VarExprAST>(std::move(VarNames), std::move(Body));
 }
 
 std::unique_ptr<AST::ExprAST> Parser::ParseExpression() {
